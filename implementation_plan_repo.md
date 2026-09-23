@@ -1,14 +1,35 @@
-# ReposIT — Wesleyan University Philippines IT Research Repository
+# ReposIT — Wesleyan University Philippines CECT Research Repository (CREST)
 
 ## Overview
 
-A full-stack **academic research repository** web application for the **Wesleyan University – Philippines IT Department**. Built with the same architecture as the PODCAST project (React 19 + Vite + Tailwind CSS + Express + Prisma/SQLite), using the **Wesleyan BSIT Digital Repository** design from Stitch.
+A full-stack **academic research repository** web application for the **Wesleyan University Philippines – College of Engineering and Computer Technology (CECT)**. Migrated from an Express + Prisma/SQLite backend to a **Supabase Cloud-native architecture** — React 19 + Vite + Tailwind CSS 4 + Supabase (PostgreSQL, Auth, Storage).
 
-The design aesthetic is **Academic Minimalism with Glassmorphism** — a light-mode, blue-centric palette inspired by the Stitch prototype.
+The design aesthetic is **Academic Minimalism with Glassmorphism** — a light-mode, blue-centric palette using the Wesleyan BSIT Digital Repository design system.
+
+**Repository:** `MarksIT23/ReposIT-testing` (GitHub)  
+**Active Branch:** `testing` (Supabase migration in progress — **main branch is untouched**)
 
 ---
 
-## Design System (from Stitch MCP)
+## Current Status: ✅ Supabase Migration Complete
+
+| Component | Status |
+|---|---|
+| Supabase Schema (PostgreSQL) | ✅ Applied & Verified |
+| Row Level Security (RLS) | ✅ All tables |
+| Supabase Auth | ✅ Live accounts seeded |
+| Supabase Storage (`capstones` bucket) | ✅ Configured |
+| Data Migration (SQLite → Supabase) | ✅ 12 cats, 9 faculty, 11 papers |
+| Frontend Supabase client | ✅ `src/services/supabase.js` |
+| `AuthContext.jsx` → Supabase Auth | ✅ Complete |
+| `data.js` → Supabase PostgREST | ✅ Complete |
+| `ProfilePage.jsx` → `supabase.auth.updateUser()` | ✅ |
+| Analytics (`byYear`, `byCategory`, `byProgram`, `topPapers`) | ✅ |
+| Build & Lint (Vite + Oxlint) | ✅ 0 errors |
+
+---
+
+## Design System
 
 | Token | Value |
 |---|---|
@@ -25,166 +46,196 @@ The design aesthetic is **Academic Minimalism with Glassmorphism** — a light-m
 
 ---
 
-## Open Questions
+## Architecture (Current)
 
-> [!IMPORTANT]
-> **Q1: Project location** — Should the new app be created in `D:\ReposIT` or a subdirectory like `D:\ReposIT\repos-it`?
+```
+ReposIT CREST (React 19 + Vite SPA — Client-direct Supabase)
+│
+├── Supabase Cloud (unaxchblqookqxmlxmyk)
+│   ├── PostgreSQL (public schema)
+│   │   ├── profiles         ← extends auth.users
+│   │   ├── categories       ← 12 research tracks (BSIT/BSCpE/BSECE)
+│   │   ├── faculty          ← 9 faculty members
+│   │   ├── research_records ← 11 capstone papers (+ FTS GIN index)
+│   │   ├── activities       ← audit trail
+│   │   └── drafts           ← student draft submissions
+│   ├── Supabase Auth        ← JWT sessions, onAuthStateChange
+│   └── Supabase Storage     ← capstones/ bucket (public PDFs)
+│
+├── Frontend (Vite Dev Server :5173)
+│   ├── src/services/supabase.js   ← Supabase JS client
+│   ├── src/services/data.js       ← All data functions (PostgREST)
+│   ├── src/contexts/AuthContext.jsx ← Supabase Auth + profiles sync
+│   └── src/pages/               ← All routes (public + protected)
+│
+├── Vite Proxy → /api → localhost:3002 (Express/legacy, no longer primary)
+└── GitHub → origin/testing branch (main untouched)
+```
 
-> [!IMPORTANT]
-> **Q2: Auth scope** — Should the app have a full login/register system (students, faculty, admin), or just an admin-protected portal?
+## Routes
 
-> [!IMPORTANT]
-> **Q3: File uploads** — Do capstone papers need actual PDF file upload support, or just metadata + external links?
-
-> [!IMPORTANT]
-> **Q4: Backend or frontend-only?** — Should this be a full-stack app with Express + SQLite (like PODCAST), or a pure frontend SPA with mock data for now?
+| Route | Roles | Component |
+|---|---|---|
+| `/` | Public | `HomePage.jsx` |
+| `/browse` | Public | `BrowsePage.jsx` |
+| `/research/:id` | Public | `ResearchDetailPage.jsx` |
+| `/faculty` | Public | `FacultyPage.jsx` |
+| `/faculty/:id` | Public | `FacultyDetailPage.jsx` |
+| `/auth` | Public | `AuthPage.jsx` |
+| `/dashboard` | student | `StudentDashboard.jsx` |
+| `/submit` | student | `SubmitResearch.jsx` |
+| `/profile` | student, faculty | `ProfilePage.jsx` |
+| `/admin` | admin | `AdminDashboard.jsx` |
+| `/admin/papers` | admin | `AdminPapers.jsx` |
+| `/admin/faculty` | admin | `AdminFaculty.jsx` |
+| `/admin/students` | admin | `AdminStudents.jsx` |
+| `/admin/categories` | admin | `AdminCategories.jsx` |
+| `/admin/analytics` | admin | `AdminAnalytics.jsx` |
+| `/portal` | faculty | `FacultyStudents.jsx` |
 
 ---
 
-## Proposed Architecture
+## Supabase Schema Summary
 
-```
-ReposIT (React + Vite SPA)
-├── Public Routes
-│   ├── /                    → Home (Hero + Stats + Faculty Grid + Featured Papers)
-│   ├── /browse              → Browse Repository (Search + Filters + List)
-│   ├── /research/:id        → Research Paper Detail
-│   ├── /faculty             → Faculty Directory
-│   ├── /faculty/:id         → Faculty Profile + their papers
-│   └── /auth                → Login / Register
-│
-├── Student Routes (protected)
-│   ├── /dashboard           → My submissions, drafts
-│   ├── /submit              → Submit new research paper
-│   └── /profile             → Edit profile
-│
-└── Admin/Faculty Routes (protected, role-based)
-    ├── /admin               → Admin Dashboard (stats, activity)
-    ├── /admin/papers        → Manage all papers (approve/reject)
-    ├── /admin/faculty       → Manage faculty accounts
-    ├── /admin/students      → Manage student accounts
-    ├── /admin/categories    → Manage research categories
-    └── /admin/analytics     → Submission trends, views
-```
+See [`docs/database_cloud_infrastructure.md`](docs/database_cloud_infrastructure.md) for full DDL.
 
-## Backend API (Express + Prisma/SQLite)
+### Tables
 
-### Models
-| Model | Fields |
+| Table | Key Fields | RLS |
+|---|---|---|
+| `profiles` | `id` (auth FK), `name`, `email`, `role`, `program`, `student_id`, `year`, `section`, `account_status`, `bio` | ✅ |
+| `categories` | `id`, `name`, `slug`, `program`, `color`, `description` | ✅ |
+| `faculty` | `id`, `name`, `email`, `department`, `specialization`, `bio`, `initials` | ✅ |
+| `research_records` | `id`, `title`, `thesis_number`, `program`, `category`, `abstract`, `authors[]`, `keywords[]`, `year`, `advisor`, `source_url`, `pdf_url`, `status`, `views`, `citations`, `fts` (GIN) | ✅ |
+| `activities` | `id`, `type`, `detail`, `user_name`, `timestamp` | ✅ |
+| `drafts` | `id`, `submitted_by`, `title`, `abstract`, `authors[]`, `keywords[]` | ✅ |
+
+### Functions / Triggers
+
+| Name | Purpose |
 |---|---|
-| **ResearchPaper** | `title`, `abstract`, `authors`, `keywords`, `year`, `category`, `status` (pending/approved/archived), `pdfUrl`, `views`, `citations` |
-| **Faculty** | `name`, `email`, `department`, `specialization`, `bio`, `papers` |
-| **Student** | `name`, `email`, `studentId`, `year`, `section` |
-| **Category** | `name`, `slug`, `description`, `color` |
-| **AdminUser** | `email`, `password`, `name`, `role` (admin/faculty) |
-| **Activity** | `type`, `user`, `detail`, `timestamp` |
+| `trigger_set_timestamp()` | Auto-updates `updated_at` on all tables |
+| `handle_new_user()` | Syncs `auth.users` INSERT → `public.profiles` |
+| `increment_paper_views(paper_id)` | Atomic view count RPC |
+
+### Seed Accounts (password: `password123`)
+
+| Email | Role |
+|---|---|
+| `admin@wesleyan.edu.ph` | admin |
+| `maria.reyes@wesleyan.edu.ph` | faculty |
+| `aris.mendoza@wesleyan.edu.ph` | faculty |
+| `sofia.delgado@wesleyan.edu.ph` | faculty |
+| `alice.bautista@wesleyan.edu.ph` | student |
+| `joshua.ramos@wesleyan.edu.ph` | student |
+| `miguel.torres@wesleyan.edu.ph` | student |
 
 ---
 
-## Proposed Changes
+## How to Run
 
-### [NEW] `D:\ReposIT\` — Root project
+### Frontend Only (Supabase cloud — no backend required)
+```bash
+npm install
+npm run dev:client
+# → http://localhost:5173
+```
 
-#### [NEW] `package.json`
-Standard Vite + React 19 + Tailwind CSS 4 + Framer Motion dependencies, matching PODCAST patterns.
+### Full Stack (includes legacy Express server)
+```bash
+# Terminal 1: Backend (legacy — no longer primary)
+cd server && npm install
+node index.js
 
-#### [NEW] `index.html`
-Entry HTML with Inter font, Material Symbols, SEO meta tags for Wesleyan University IT Research Repository.
+# Terminal 2: Frontend
+npm run dev:client
 
-#### [NEW] `vite.config.js`
-Vite config with React plugin, proxy to backend at port 3002.
+# Or both at once (requires concurrently)
+npm install
+npm run dev
+```
 
----
+### Utilities
+```bash
+# One-time data migration from SQLite → Supabase
+node scripts/migrate-to-supabase.js
 
-### [NEW] `src/` — Frontend
-
-#### [NEW] `src/styles/design-system.css`
-All CSS custom properties from the Stitch design system:
-- Blue palette tokens
-- Glass card utilities (`.glass-card`, `.luminous-shadow`, `.glow-orb`)
-- Typography scale matching Stitch
-
-#### [NEW] `src/styles/animations.css`
-Float animation, hover lift, page transitions.
-
-#### [NEW] `src/App.jsx`
-Router with all routes, `AuthProvider`, `ToastProvider`, lazy-loaded pages.
-
-#### [NEW] `src/pages/HomePage.jsx`
-Hero section (glassmorphism card + glow orbs), stats strip (4 metrics), Faculty list column, Featured papers bento grid. Matches Stitch home screen exactly.
-
-#### [NEW] `src/pages/BrowsePage.jsx`
-Search bar (glass style), filter chips (year/category/status), research paper list cards with status badges.
-
-#### [NEW] `src/pages/ResearchDetailPage.jsx`
-Full paper view: title, authors, abstract, keywords, PDF viewer link, citation count, related papers.
-
-#### [NEW] `src/pages/FacultyPage.jsx`
-Faculty directory with profile cards.
-
-#### [NEW] `src/pages/AuthPage.jsx`
-Glassmorphism login/register form with role selector.
-
-#### [NEW] `src/pages/user/SubmitResearch.jsx`
-Multi-step submission form: paper metadata → authors → upload PDF → review & submit.
-
-#### [NEW] `src/pages/user/StudentDashboard.jsx`
-Submitted papers status, drafts.
-
-#### [NEW] `src/pages/admin/AdminDashboard.jsx`
-KPI cards, recent activity, submission pipeline.
-
-#### [NEW] `src/pages/admin/AdminPapers.jsx`
-Full CRUD table — approve/reject submissions, edit metadata.
-
-#### [NEW] `src/pages/admin/AdminAnalytics.jsx`
-Charts: submissions per year, views trend, categories breakdown.
-
-#### [NEW] `src/components/layout/Navbar.jsx`
-Glass navbar with ReposIT logo, nav links, notifications icon, profile avatar.
-
-#### [NEW] `src/components/layout/AdminLayout.jsx`
-280px sidebar (Notion-style) + main content area.
-
-#### [NEW] `src/components/ui/GlassCard.jsx`
-Reusable glassmorphism card component.
-
-#### [NEW] `src/components/ui/ResearchCard.jsx`
-Research paper card with title, abstract excerpt, author avatars, status badge, view button.
-
-#### [NEW] `src/components/SearchBar.jsx`
-Glass-styled search bar with icon.
-
-#### [NEW] `src/services/api.js` + `src/services/data.js`
-Axios instance + all data service functions (mirroring PODCAST patterns).
-
-#### [NEW] `src/contexts/AuthContext.jsx`
-JWT-based auth context.
+# Verify Supabase connection & data integrity
+node scripts/verify-supabase.js
+```
 
 ---
 
-### [NEW] `server/` — Backend (Express + Prisma)
+## Key Files Changed (Supabase Migration)
 
-#### [NEW] `server/index.js`
-Express server on port 3002, with all API routes registered.
-
-#### [NEW] `server/prisma/schema.prisma`
-Prisma schema with all models listed above.
-
-#### [NEW] `server/prisma/seed.js`
-Seed data: sample categories, faculty accounts, research papers, admin user.
-
-#### [NEW] `server/routes/` 
-Papers, faculty, students, categories, auth, analytics, admin routes.
+| File | Change |
+|---|---|
+| `.env` | Supabase URL + Anon Key |
+| `.env.example` | Template for env vars |
+| `.mcp.json` | Supabase MCP server config |
+| `src/services/supabase.js` | NEW — Supabase client init |
+| `src/services/data.js` | Migrated from Axios → Supabase PostgREST |
+| `src/contexts/AuthContext.jsx` | Migrated from JWT/Express → Supabase Auth |
+| `src/pages/user/ProfilePage.jsx` | Password change → `supabase.auth.updateUser()` |
+| `src/pages/admin/AdminPapers.jsx` | Removed unused `categoryList` state |
+| `scripts/migrate-to-supabase.js` | NEW — one-time data migration script |
+| `scripts/verify-supabase.js` | NEW — integration verification script |
+| `docs/database_cloud_infrastructure.md` | NEW — full DB & infra plan |
+| `package.json` | Added `@supabase/supabase-js@2.48.0` |
 
 ---
 
-## Verification Plan
+## Homepage Background Video Strategy (Zero-Egress CDN)
 
-### Manual Verification
-1. Start backend: `cd server && node index.js`
-2. Start frontend: `npm run dev`
-3. Visit `http://localhost:5173` — confirm home page renders with glass cards, blue palette, glow orbs
-4. Browse `/browse` — confirm search + filter works
-5. Login as admin → confirm `/admin` dashboard loads
-6. Submit a paper as a student → confirm it appears in admin queue
+Per [`docs/database_cloud_infrastructure.md`](docs/database_cloud_infrastructure.md), background videos are **served from the Vite `/public` directory** (CDN-delivered), **not Supabase Storage**. This eliminates egress fees.
+
+```
+public/
+└── videos/
+    ├── hero-1.mp4   (44.9 MB)
+    ├── hero-2.mp4   (16.4 MB)
+    ├── hero-3.mp4   (7.2 MB)
+    └── hero-4.mp4   (2.2 MB)
+```
+
+These are referenced in `HomePage.jsx` as `/videos/hero-N.mp4` and served with `muted`, `playsinline`, and `loop` attributes.
+
+**For production deployment (Vercel/Netlify), add these cache headers:**
+```json
+// vercel.json
+{
+  "headers": [
+    {
+      "source": "/videos/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    }
+  ]
+}
+```
+
+---
+
+## Verification Results
+
+```
+--- Verifying Supabase Integration ---
+✔ Categories: 12 loaded.
+✔ Faculty: 9 loaded.
+✔ Research Papers: 11 loaded.
+✔ Full-Text Search for "blockchain": 1 match(es).
+✔ Storage Capstones Bucket: 1 file(s) found: [ 'sample-manuscript.pdf' ]
+✔ Auth Sign-in successful for: admin@wesleyan.edu.ph (Role: admin)
+--- ALL CHECKS PASSED SUCCESSFULLY ---
+
+Vite production build: ✓ 0 errors, built in 444ms
+Oxlint: ✓ 0 errors on 47 files
+```
+
+---
+
+## Git Branches
+
+| Branch | State |
+|---|---|
+| `main` | **Untouched** — original SQLite/Express app |
+| `testing` | **Active** — Supabase cloud migration |
