@@ -493,42 +493,101 @@ export async function getAnalytics() {
   try {
     const [
       { count: totalPapers },
-      { count: approvedPapers },
-      { count: pendingPapers },
       { count: facultyCount },
       { count: studentCount },
-      { data: papersData },
+      { data: allPapers },
+      { data: allCategories },
     ] = await Promise.all([
       supabase.from('research_records').select('*', { count: 'exact', head: true }),
-      supabase.from('research_records').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
-      supabase.from('research_records').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
       supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'faculty'),
       supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student'),
-      supabase.from('research_records').select('views, citations'),
+      supabase.from('research_records').select('id, title, year, category, program, status, views, citations'),
+      supabase.from('categories').select('name, color, program'),
     ]);
 
-    const totalViews = (papersData || []).reduce((acc, p) => acc + (p.views || 0), 0);
-    const totalCitations = (papersData || []).reduce((acc, p) => acc + (p.citations || 0), 0);
+    const papers = allPapers || [];
+    const categories = allCategories || [];
+
+    // Aggregate totals
+    const totalViews = papers.reduce((acc, p) => acc + (p.views || 0), 0);
+    const totalCitations = papers.reduce((acc, p) => acc + (p.citations || 0), 0);
+    const approvedCount = papers.filter((p) => p.status === 'approved').length;
+    const pendingCount = papers.filter((p) => p.status === 'pending').length;
+
+    // By Year
+    const yearMap = {};
+    for (const p of papers) {
+      if (!p.year) continue;
+      yearMap[p.year] = (yearMap[p.year] || 0) + 1;
+    }
+    const byYear = Object.entries(yearMap)
+      .map(([year, count]) => ({ year: parseInt(year, 10), count }))
+      .sort((a, b) => a.year - b.year);
+
+    // By Category (with color from categories table)
+    const catMap = {};
+    for (const p of papers) {
+      if (!p.category) continue;
+      catMap[p.category] = (catMap[p.category] || 0) + 1;
+    }
+    const catColorMap = Object.fromEntries(categories.map((c) => [c.name, { color: c.color || '#004ac6', program: c.program }]));
+    const byCategory = Object.entries(catMap)
+      .map(([name, count]) => ({
+        name,
+        count,
+        color: catColorMap[name]?.color || '#004ac6',
+        program: catColorMap[name]?.program || 'Both',
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    // By Program
+    const byProgram = {};
+    for (const p of papers) {
+      const prog = p.program || 'BSIT';
+      if (!byProgram[prog]) byProgram[prog] = { count: 0, views: 0, approved: 0 };
+      byProgram[prog].count += 1;
+      byProgram[prog].views += p.views || 0;
+      if (p.status === 'approved') byProgram[prog].approved += 1;
+    }
+
+    // Top papers by views
+    const topPapers = [...papers]
+      .filter((p) => p.status === 'approved')
+      .sort((a, b) => (b.views || 0) - (a.views || 0))
+      .slice(0, 8)
+      .map((p) => ({ id: p.id, title: p.title, views: p.views || 0 }));
 
     return {
       totalPapers: totalPapers || 0,
-      approvedPapers: approvedPapers || 0,
-      pendingPapers: pendingPapers || 0,
+      approvedCount,
+      approvedPapers: approvedCount,
+      pendingCount,
+      pendingPapers: pendingCount,
       facultyCount: facultyCount || 0,
       studentCount: studentCount || 0,
       totalViews,
       totalCitations,
+      byYear,
+      byCategory,
+      byProgram,
+      topPapers,
     };
   } catch (err) {
     console.error('getAnalytics error:', err);
     return {
       totalPapers: 0,
+      approvedCount: 0,
       approvedPapers: 0,
+      pendingCount: 0,
       pendingPapers: 0,
       facultyCount: 0,
       studentCount: 0,
       totalViews: 0,
       totalCitations: 0,
+      byYear: [],
+      byCategory: [],
+      byProgram: {},
+      topPapers: [],
     };
   }
 }
