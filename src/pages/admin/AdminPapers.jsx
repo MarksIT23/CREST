@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
-import { getPapers, updatePaperStatus, updatePaper, archivePaper, getCategories } from '../../services/data';
+import { getPapers, updatePaperStatus, updatePaper, archivePaper } from '../../services/data';
 import ReviewDecisionDialog from '../../components/admin/ReviewDecisionDialog';
 import StatusBadge from '../../components/ui/StatusBadge';
 import SearchBar from '../../components/SearchBar';
@@ -25,7 +25,6 @@ const PROGRAMS = [
 export default function AdminPapers() {
   const { user } = useAuth();
   const [papers, setPapers] = useState([]);
-  const [categoryList, setCategoryList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState('');
@@ -34,10 +33,6 @@ export default function AdminPapers() {
   const [editForm, setEditForm] = useState(null);
   const [toast, setToast] = useState('');
   const [dialog, setDialog] = useState(null);
-
-  useEffect(() => {
-    getCategories().then((cats) => setCategoryList(cats.map((c) => c.name)));
-  }, []);
 
   const refresh = useCallback(async () => {
     const data = await getPapers({ search, status: tab || undefined, program: program || undefined });

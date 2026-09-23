@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
-import axios from 'axios';
+import { supabase } from '../../services/supabase';
 
 const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Graduate', 'Alumni'];
 
@@ -73,19 +73,17 @@ export default function ProfilePage() {
 
     setPwLoading(true);
     try {
-      const res = await axios.patch('/api/auth/change-password', {
-        id:              user.id,
-        currentPassword: pw.current,
-        newPassword:     pw.next,
+      const { error } = await supabase.auth.updateUser({
+        password: pw.next,
       });
-      if (res.data.ok) {
+      if (error) {
+        setPwError(error.message || 'Failed to change password.');
+      } else {
         setPwSuccess('Password changed successfully!');
         setPw({ current: '', next: '', confirm: '' });
-      } else {
-        setPwError(res.data.error || 'Failed to change password.');
       }
     } catch (err) {
-      setPwError(err.response?.data?.error || 'Failed to change password.');
+      setPwError(err.message || 'Failed to change password.');
     } finally {
       setPwLoading(false);
     }
