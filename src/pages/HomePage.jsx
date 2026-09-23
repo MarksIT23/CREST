@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getPapers, getCategories } from '../services/data';
 import ResearchCard from '../components/ui/ResearchCard';
+import heroPoster from '../assets/hero.png';
 
 // ---------------------------------------------------------------------------
 // Hero media switch — hero-only. Change `type` to swap background without
@@ -11,18 +12,18 @@ import ResearchCard from '../components/ui/ResearchCard';
 // ---------------------------------------------------------------------------
 const HERO_MEDIA = {
   type: 'video', // 'image' | 'gif' | 'video'
-  image: '/src/assets/hero.png',
-  gif: '/src/assets/hero.png',
-  video: '/src/assets/hero.mp4',
-  // Playlist: videos play one after another, looping forever. Drop your .mp4
-  // files into public/videos/ and list them here in play order.
+  image: heroPoster,
+  gif: heroPoster,
+  video: '/videos/hero-2.mp4',
+  // Playlist: videos play one after another, looping forever. Served from /public/videos/
+  // with immutable edge CDN caching and smart lazy-preloading to minimize egress.
   videos: [
     '/videos/hero-2.mp4',
     '/videos/hero-1.mp4',
     '/videos/hero-3.mp4',
     '/videos/hero-4.mp4',
   ],
-  poster: '/src/assets/hero.png',
+  poster: heroPoster,
   fallbackImage:
     'https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=2000&auto=format&fit=crop',
 };
@@ -108,18 +109,50 @@ export default function HomePage() {
   const heroVideos = HERO_MEDIA.videos?.length ? HERO_MEDIA.videos : [HERO_MEDIA.video];
   const [videoIndex, setVideoIndex] = useState(0);
   const videoRefs = useRef([]);
+  const heroSectionRef = useRef(null);
+  const [isHeroVisible, setIsHeroVisible] = useState(true);
+
+  // Egress optimization: pause playback when hero is scrolled out of view or tab is hidden
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsHeroVisible(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+
+    if (heroSectionRef.current) {
+      observer.observe(heroSectionRef.current);
+    }
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        setIsHeroVisible(false);
+      } else if (heroSectionRef.current) {
+        const rect = heroSectionRef.current.getBoundingClientRect();
+        setIsHeroVisible(rect.bottom > 0 && rect.top < window.innerHeight);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, []);
 
   useEffect(() => {
     const active = videoIndex % heroVideos.length;
     videoRefs.current.forEach((v, i) => {
       if (!v) return;
-      if (i === active) {
+      if (i === active && isHeroVisible) {
         v.play().catch(() => { });
       } else {
         v.pause();
       }
     });
-  }, [videoIndex, heroVideos.length]);
+  }, [videoIndex, heroVideos.length, isHeroVisible]);
 
   return (
     <>
@@ -161,6 +194,7 @@ export default function HomePage() {
         )}
       </AnimatePresence>
       <motion.section
+        ref={heroSectionRef}
         variants={itemVariants}
         initial="hidden"
         animate={introDone ? 'show' : 'hidden'}
@@ -170,19 +204,26 @@ export default function HomePage() {
         <div className="absolute inset-0">
           {heroType === 'video' ? (
             heroVideos.map((src, i) => {
-              const activeVideo = i === videoIndex % heroVideos.length;
+              const activeIndex = videoIndex % heroVideos.length;
+              const nextIndex = (activeIndex + 1) % heroVideos.length;
+              const isActive = i === activeIndex;
+              const isNext = i === nextIndex;
+              // Egress guard: only mount network src for active video and immediately next item
+              const shouldMountSrc = isActive || isNext;
+              const preloadMode = isActive ? 'auto' : isNext ? 'metadata' : 'none';
+
               return (
                 <video
                   key={src}
                   ref={(el) => {
                     videoRefs.current[i] = el;
                   }}
-                  className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${activeVideo ? 'opacity-100' : 'opacity-0'}`}
-                  src={src}
+                  className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${isActive ? 'opacity-100' : 'opacity-0'}`}
+                  src={shouldMountSrc ? src : undefined}
                   poster={HERO_MEDIA.poster}
                   muted
                   playsInline
-                  preload="auto"
+                  preload={preloadMode}
                   onEnded={() => setVideoIndex((v) => (v + 1) % heroVideos.length)}
                   onError={() => setVideoIndex((v) => (v + 1) % heroVideos.length)}
                 />
