@@ -17,12 +17,12 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, [location.pathname]);
 
-  const isHome = location.pathname === '/';
+  const isHeroPage = location.pathname === '/' || location.pathname === '/about';
   const scrolledOrOpen = scrolled || menuOpen;
-  const solid = isHome ? scrolledOrOpen : scrolled;
+  const solid = isHeroPage ? scrolledOrOpen : scrolled;
   const barred = solid || hovered;
   // White treatments only while floating over the dark hero video.
-  const onDark = isHome && !scrolledOrOpen && !hovered;
+  const onDark = isHeroPage && !scrolledOrOpen && !hovered;
 
   const handleLogout = () => {
     logout();
@@ -79,6 +79,9 @@ export default function Navbar() {
           </NavLink>
           <NavLink to="/faculty" className={({ isActive }) => `${linkBase} ${linkTone(isActive)}`}>
             Faculties
+          </NavLink>
+          <NavLink to="/about" className={({ isActive }) => `${linkBase} ${linkTone(isActive)}`}>
+            About
           </NavLink>
           {user?.role === 'student' && (
             <NavLink to="/dashboard" className={({ isActive }) => `${linkBase} ${linkTone(isActive)}`}>

@@ -12,6 +12,7 @@ const BrowsePage = lazy(() => import('./pages/BrowsePage'));
 const ResearchDetailPage = lazy(() => import('./pages/ResearchDetailPage'));
 const FacultyPage = lazy(() => import('./pages/FacultyPage'));
 const FacultyDetailPage = lazy(() => import('./pages/FacultyDetailPage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
 const AuthPage = lazy(() => import('./pages/AuthPage'));
 const SubmitResearch = lazy(() => import('./pages/user/SubmitResearch'));
 const StudentDashboard = lazy(() => import('./pages/user/StudentDashboard'));
@@ -63,6 +64,7 @@ function Shell() {
   const location = useLocation();
   const isAdminArea = location.pathname.startsWith('/admin') || location.pathname.startsWith('/portal');
   const isHome = location.pathname === '/';
+  const isAbout = location.pathname === '/about';
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-on-background font-body relative">
@@ -77,7 +79,7 @@ function Shell() {
       <CursorGlow />
       <ScrollToTop />
 
-      <main className={`flex-1 relative z-10 ${isHome || isAdminArea ? '' : 'pt-[76px]'}`}>
+      <main className={`flex-1 relative z-10 ${isHome || isAbout || isAdminArea ? '' : 'pt-[76px]'}`}>
         <Suspense fallback={<Loader />}>
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
@@ -87,6 +89,7 @@ function Shell() {
               <Route path="/research/:id" element={<ResearchDetailPage />} />
               <Route path="/faculty" element={<FacultyPage />} />
               <Route path="/faculty/:id" element={<FacultyDetailPage />} />
+              <Route path="/about" element={<AboutPage />} />
               <Route path="/auth" element={<AuthPage />} />
 
               {/* Student / any authenticated user */}

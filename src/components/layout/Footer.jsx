@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 const EXPLORE_LINKS = [
   { label: 'Browse repository', to: '/browse' },
   { label: 'Faculty', to: '/faculty' },
+  { label: 'About the archive', to: '/about' },
   { label: 'Submit capstone', to: '/submit' },
   { label: 'Sign in', to: '/auth' },
 ];
