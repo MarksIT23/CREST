@@ -14,3 +14,4 @@
 | **Task 10: Zero-Egress Video CDN & Vercel Config** | Completed | Background videos in `/public/videos/`, `vercel.json` headers and SPA rewrites |
 | **Task 11: System Verification & Testing** | Completed | `scripts/verify-supabase.js` passing, Vite build passing (0 errors) |
 | **Task 12: GitHub `testing` Branch Active** | Completed | All changes pushed to `origin/testing` with descriptive commit history |
+| **Task 13: Hero Video Egress & Bandwidth Guard** | Completed | Multi-CDN caching (Vercel, Netlify, Cloudflare), lazy video preloading (~77% bandwidth drop), IntersectionObserver auto-pause |
