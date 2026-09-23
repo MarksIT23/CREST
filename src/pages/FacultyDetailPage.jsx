@@ -100,9 +100,9 @@ export default function FacultyDetailPage() {
       {/* Papers */}
       <motion.div variants={itemVariants}>
         <h2 className="font-display text-[22px] font-bold mb-6">
-          Research Papers <span className="text-on-surface-variant text-[16px] font-medium">({faculty.papers.length})</span>
+          Research Papers <span className="text-on-surface-variant text-[16px] font-medium">({(faculty.papers || []).length})</span>
         </h2>
-        {faculty.papers.length === 0 ? (
+        {(!faculty.papers || faculty.papers.length === 0) ? (
           <div className="border-t border-neutral-200 pt-8 text-neutral-500">
             <span className="material-symbols-outlined text-[40px] mb-3 block text-neutral-300">description</span>
             <p className="text-[14px] font-medium">No published papers linked to this faculty member yet.</p>

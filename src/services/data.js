@@ -309,10 +309,32 @@ export async function getFaculty() {
 
 export async function getFacultyById(id) {
   try {
-    const { data, error } = await supabase.from('faculty').select('*').eq('id', id).single();
-    if (error) return null;
-    return data;
-  } catch {
+    const { data: faculty, error } = await supabase
+      .from('faculty')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !faculty) return null;
+
+    // Fetch papers advised by this faculty member
+    const rawName = faculty.name.replace(/^(Dr\.|Engr\.|Prof\.|Mr\.|Ms\.|Mrs\.)\s+/i, '').trim();
+    const { data: papers } = await supabase
+      .from('research_records')
+      .select('*')
+      .or(`advisor.ilike.%${faculty.name}%,advisor.ilike.%${rawName}%`)
+      .order('year', { ascending: false });
+
+    const formattedPapers = (papers || []).map(formatPaper);
+
+    return {
+      ...faculty,
+      papers: formattedPapers,
+      paperCount: formattedPapers.length,
+      advisedPaperList: formattedPapers,
+    };
+  } catch (err) {
+    console.error('getFacultyById error:', err);
     return null;
   }
 }
