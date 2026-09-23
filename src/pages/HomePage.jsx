@@ -209,7 +209,7 @@ export default function HomePage() {
             className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 font-mono text-[12px] font-semibold uppercase tracking-[0.2em] text-white/90 backdrop-blur-md"
           >
             <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-            Wesleyan University Philippines — CECT
+            Wesleyan University Philippines
           </motion.p>
           <div className="overflow-hidden">
             <motion.h1
@@ -262,17 +262,17 @@ export default function HomePage() {
           >
             <span className="inline-flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-white/80">verified</span>
-              Peer-reviewed archive
+              Peer-reviewed Archive
             </span>
             <span className="hidden h-4 w-px bg-white/20 sm:block" />
             <span className="inline-flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-white/80">school</span>
-              BSIT + BSCpE + BSECE coverage
+              BSIT + BSCpE + BSECE Coverage
             </span>
             <span className="hidden h-4 w-px bg-white/20 sm:block" />
             <span className="inline-flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-white/80">public</span>
-              Open to the university
+              Open to All
             </span>
           </motion.div>
         </div>
@@ -314,7 +314,7 @@ export default function HomePage() {
                 d={`M0,${y} C180,${y - 60} 360,${y - 60} 540,${y} S900,${y + 60} 1080,${y} S1380,${y - 60} 1440,${y}`}
                 stroke="currentColor"
                 className="text-neutral-900"
-                strokeOpacity={o}
+                strokeOpacity={0.05}
                 strokeWidth="1.5"
               />
             ))}
@@ -490,7 +490,7 @@ export default function HomePage() {
                 { abbr: 'BSECE', name: 'BS Electronics Engineering', text: 'Telecommunications, power systems, and electronics design capstones.', dx: 'right-0' },
               ].map((p, i) => (
                 <motion.div key={p.abbr} variants={i === 0 ? slideLeft : slideRight} className="relative overflow-hidden py-4 md:px-12 md:first:pl-0 md:last:pr-0">
-                  <span className={`pointer-events-none absolute -top-2 ${p.dx} font-display text-[84px] md:text-[112px] font-bold leading-none text-neutral-900/[0.05] select-none`} aria-hidden="true">{p.abbr}</span>
+                  <span className={`pointer-events-none absolute -top-2 ${p.dx} font-display text-[84px] md:text-[112px] font-bold leading-none text-neutral-900/[0.15] select-none`} aria-hidden="true">{p.abbr}</span>
                   <div className="relative">
                     <div className="text-[13px] font-semibold uppercase tracking-[0.2em] text-neutral-400">{p.abbr}</div>
                     <div className="text-[22px] font-bold text-neutral-900 md:text-[26px]">{p.name}</div>
@@ -505,7 +505,7 @@ export default function HomePage() {
             </div>
             <div className="mt-12 md:mt-14 md:border-t md:border-neutral-200 md:pt-14">
               <div className="relative overflow-hidden py-4 md:mx-auto md:max-w-2xl">
-                <span className="pointer-events-none absolute -top-2 right-24 font-display text-[84px] md:text-[112px] font-bold leading-none text-neutral-900/[0.05] select-none" aria-hidden="true">BSCpE</span>
+                <span className="pointer-events-none absolute -top-2 right-24 font-display text-[84px] md:text-[112px] font-bold leading-none text-neutral-900/[0.15] select-none" aria-hidden="true">BSCpE</span>
                 <div className="relative">
                   <div className="text-[13px] font-semibold uppercase tracking-[0.2em] text-neutral-400">BSCpE</div>
                   <div className="text-[22px] font-bold text-neutral-900 md:text-[26px]">BS Computer Engineering</div>
