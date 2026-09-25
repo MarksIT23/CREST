@@ -2,7 +2,8 @@
 date: 2026-09-21
 topic: "Hero Revamp Implementation Plan"
 design: "thoughts/shared/designs/2026-09-21-hero-revamp-design.md"
-status: ready
+status: completed
+completed_date: 2026-09-23
 ---
 
 ## Goal
@@ -22,10 +23,16 @@ Implement fullscreen media hero with floating transparent header per locked desi
 - **Styles:** Add hero-owned neutral palette and scrim utilities independent of existing theme tokens, add viewport height and scroll cue motion with reduced-motion guard.
 - **Media:** Default to local hero image, allow GIF as image mode, allow video with poster fallback and muted loop inline behavior.
 
+## Implementation & Optimization (Completed)
+
+- **Bandwidth & Video Guard:** Multi-CDN caching configured in `vercel.json` and `netlify.toml` with `Cache-Control: public, max-age=31536000, immutable`. Video preloading set to lazy to prevent excessive egress.
+- **IntersectionObserver:** Background video auto-pauses when scrolled out of view.
+- **Hero Copy & Trust Bar:** Merged from main (`435f305`), presenting institutional trust indicators and clear CTAs.
+
 ## Verification
 
-- Viewport fill on desktop, tablet, and mobile with no gaps.
-- Scroll transition flips header cleanly and hero fully exits.
-- Media swap across image, GIF, and video without layout shift.
-- Blocked media and throttled load remain readable.
-- Existing browse, auth, and admin guards unaffected.
+- [x] Viewport fill on desktop, tablet, and mobile with no gaps.
+- [x] Scroll transition flips header cleanly and hero fully exits.
+- [x] Media swap across image, GIF, and video without layout shift.
+- [x] Blocked media and throttled load remain readable.
+- [x] Existing browse, auth, and admin guards unaffected.

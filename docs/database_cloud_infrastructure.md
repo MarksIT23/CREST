@@ -211,3 +211,69 @@ Migrating from a local setup to the cloud requires a staged approach to maintain
    Write a local Node.js or Python script that reads the local PDF directory and uses the `supabase-js` Storage API to upload files to the `capstones` bucket. Update the corresponding `pdf_path` in the `research_records` table if the resulting path differs from the initial local reference.
 6. **Final Validation:**
    Run parallel tests comparing local text search results with the new Supabase GIN index implementation to verify parity.
+
+---
+
+## 7. Supabase Auth GoTrue Null-Safety & Token Defaults
+
+### The GoTrue Driver Issue ("Database error querying schema")
+When inserting or seeding users directly into PostgreSQL's `auth.users` table via SQL (bypassing the GoTrue HTTP API), the internal Go driver (`database/sql` / `pgx`) scans database columns into non-nullable Go string fields. If any varchar or text token columns are `NULL`, GoTrue crashes on login and returns:
+```
+Database error querying schema
+```
+
+### Remediation & DDL Standard
+All direct inserts or migrations touching `auth.users` MUST set token and change columns to empty strings (`''`) rather than `NULL`:
+
+```sql
+UPDATE auth.users
+SET
+  confirmation_token          = COALESCE(confirmation_token, ''),
+  recovery_token              = COALESCE(recovery_token, ''),
+  email_change_token_new      = COALESCE(email_change_token_new, ''),
+  email_change_token_current  = COALESCE(email_change_token_current, ''),
+  phone_change_token          = COALESCE(phone_change_token, ''),
+  reauthentication_token      = COALESCE(reauthentication_token, ''),
+  email_change                = COALESCE(email_change, ''),
+  phone_change                = COALESCE(phone_change, '')
+WHERE confirmation_token IS NULL
+   OR recovery_token IS NULL
+   OR email_change IS NULL
+   OR email_change_token_new IS NULL
+   OR email_change_token_current IS NULL
+   OR phone_change_token IS NULL
+   OR reauthentication_token IS NULL
+   OR phone_change IS NULL;
+```
+
+---
+
+## 8. Institutional Account Lifecycle & Faculty Approval Flow
+
+CREST operates as a university departmental repository with a manual academic vetting gate for student accounts.
+
+### Authentication Settings
+- **Email Confirmations:** Disabled in the Supabase Dashboard (`Authentication -> Providers -> Email -> Confirm email = OFF`). Because the university environment relies on internal faculty vetting rather than public self-service email verification, requiring SMTP confirmations causes onboarding friction.
+- **Auto-Confirm:** Newly registered students have their auth credentials created immediately, but their profile status determines access.
+
+### Account Lifecycle Stages
+
+```mermaid
+graph TD
+    A["Student Signs Up (/auth)"] --> B["auth.users Created (email confirmed)"]
+    B --> C["public.profiles Created (account_status: pending)"]
+    C --> D["Student Attempts Login"]
+    D --> E{"account_status == 'active'?"}
+    E -- No --> F["Blocked: 'Account pending faculty approval'"]
+    E -- Yes --> G["Granted Access: Student Dashboard (/dashboard)"]
+    
+    C --> H["Faculty / Admin Views Pending Students (/portal)"]
+    H --> I["Faculty Clicks 'Approve'"]
+    I --> J["public.profiles.account_status = 'active'"]
+    J --> G
+```
+
+1. **Registration:** Student submits the registration form with student ID, degree program (`BSIT` or `BSCpE`), year level, and section.
+2. **Profile Sync:** The Supabase trigger `handle_new_user()` initializes `public.profiles` with `account_status = 'pending'`.
+3. **Faculty Vetting:** Faculty members review pending submissions in the Faculty Portal (`/portal`).
+4. **Activation:** Upon approval, `updateStudentStatus(id, 'active')` modifies `public.profiles`. The student is now able to authenticate and upload research capstones.

@@ -1,12 +1,16 @@
 # CECT Expansion & Local SQLite Database Implementation Plan
 
-> **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
+> [!NOTE]
+> **Status: Phase 1 Completed & Superseded by Cloud Migration (Phase 2)**  
+> This plan documented the initial CECT expansion and local SQLite (`dev.db`) + Express backend prototype. The backend has since been fully migrated to **Supabase Cloud-native architecture** (`unaxchblqookqxmlxmyk.supabase.co`) with PostgreSQL, Supabase Auth, and Supabase Storage.  
+> See the active architecture in [`implementation_plan_repo.md`](../../implementation_plan_repo.md) and [`docs/database_cloud_infrastructure.md`](../database_cloud_infrastructure.md).
 
-**Goal:** Expand ReposIT into a full-stack research repository for the CECT Department (BSIT & BSCpE) backed by a local SQLite database (Prisma ORM) and functional PDF document uploads.
+**Goal:** Expand ReposIT into a full-stack research repository for the CECT Department (BSIT & BSCpE) backed by academic taxonomy, multi-program filtering, and functional PDF document uploads.
 
-**Architecture:** Node.js/Express backend on port 3002 with Prisma ORM querying a local SQLite file (`dev.db`), `multer` for PDF document upload into `server/uploads/papers/`, and a Vite/React 19 frontend consuming `/api` endpoints via Vite proxy. All work isolated to branch `testing`.
+**Historical Architecture:** Node.js/Express backend on port 3002 with Prisma ORM querying a local SQLite file (`dev.db`), `multer` for PDF document upload into `server/uploads/papers/`, and a Vite/React 19 frontend consuming `/api` endpoints via Vite proxy.  
+**Current Production Architecture:** Direct client connection to Supabase Cloud (PostgreSQL, Supabase Auth, Supabase Storage). The `server/` directory remains as an offline legacy reference.
 
-**Tech Stack:** React 19, Vite, Tailwind CSS 4, Framer Motion, Express, Prisma ORM, SQLite, Multer, Axios.
+**Tech Stack:** React 19, Vite, Tailwind CSS 4, Framer Motion, `@supabase/supabase-js` (Primary); Express, Prisma, SQLite (Legacy/Historical).
 
 ---
 

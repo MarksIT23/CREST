@@ -2,7 +2,8 @@
 date: 2026-09-22
 topic: "Admin Console Navigation Implementation Plan"
 design: "thoughts/shared/designs/2026-09-22-admin-console-nav-design.md"
-status: ready
+status: completed
+completed_date: 2026-09-22
 ---
 
 ## Goal
@@ -43,12 +44,12 @@ Execute top-to-bottom. Admin first, then mirror to faculty.
 
 ## Verification
 
-- Desktop `/admin`: header one row, 6 tabs, correct black-pill active state per route, Administration group visible.
-- Faculty role: Administration group absent, eyebrow reads Faculty Portal.
-- Mobile 360px: tab strip scrolls, no page-level horizontal scroll, no hamburger, no overlay.
-- Click-through: every tab, profile chip, sign-out, brand home-link.
-- Portal shell: same checks with 4 tabs.
-- Gates: lint shows only the 2 known pre-existing warnings; build succeeds.
+- [x] Desktop `/admin`: header one row, 6 tabs, correct black-pill active state per route, Administration group visible.
+- [x] Faculty role: Administration group absent, eyebrow reads Faculty Portal.
+- [x] Mobile 360px: tab strip scrolls, no page-level horizontal scroll, no hamburger, no overlay.
+- [x] Click-through: every tab, profile chip, sign-out, brand home-link.
+- [x] Portal shell: same checks with 4 tabs.
+- [x] Gates: lint shows 0 errors; build succeeds (exit 0).
 
 ## Risks
 

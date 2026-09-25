@@ -15,3 +15,7 @@
 | **Task 11: System Verification & Testing** | Completed | `scripts/verify-supabase.js` passing, Vite build passing (0 errors) |
 | **Task 12: GitHub `testing` Branch Active** | Completed | All changes pushed to `origin/testing` with descriptive commit history |
 | **Task 13: Hero Video Egress & Bandwidth Guard** | Completed | Multi-CDN caching (Vercel, Netlify, Cloudflare), lazy video preloading (~77% bandwidth drop), IntersectionObserver auto-pause |
+| **Task 14: Merge Latest Main into Testing** | Completed | Cleanly merged `origin/main` (About page, hero copy updates, docs) into `testing` branch |
+| **Task 15: Fix Supabase Auth GoTrue Schema Tokens** | Completed | Patched NULL token columns in `auth.users` to empty strings `''` resolving "Database error querying schema" on login |
+| **Task 16: Configure Faculty Approval & Auth Flow** | Completed | Disabled Supabase email confirmations to allow faculty-managed account approval (`pending` -> `active`) |
+| **Task 17: Modernize Project Plans & Documentation** | Completed | Analyzed and updated all project plan markdown files to reflect current Supabase Cloud setup |

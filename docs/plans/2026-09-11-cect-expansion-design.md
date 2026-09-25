@@ -1,9 +1,14 @@
 # ReposIT — CECT Department Digital Research Repository Design
 
+> [!NOTE]
+> **Status: Implemented & Evolved to Supabase Cloud**  
+> The academic taxonomy and CECT program structures designed in this document are fully implemented. The data persistence layer has evolved from the initial SQLite prototype (`dev.db`) to **Supabase Cloud (PostgreSQL, Auth, Storage)**.  
+> For the active production schema, RLS policies, and zero-egress video architecture, refer to [`docs/database_cloud_infrastructure.md`](../database_cloud_infrastructure.md).
+
 ## Overview
 ReposIT is an academic research repository web application for Wesleyan University – Philippines. This design document establishes the expansion from a BSIT-only application to a college-wide repository for the **College of Engineering and Computer Technology (CECT)**, supporting both **BS in Information Technology (BSIT)** and **BS in Computer Engineering (BSCpE)**.
 
-The system will transition from browser-only `localStorage` to a fully self-contained local backend powered by **Node.js/Express, Prisma ORM, and SQLite**, complete with PDF manuscript file upload and retrieval.
+The system transitioned from browser-only `localStorage` through a local prototype (**Node.js/Express, Prisma ORM, SQLite**) to a scalable cloud-native solution powered by **Supabase Cloud**.
 
 ---
 

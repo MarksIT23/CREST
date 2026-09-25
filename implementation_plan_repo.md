@@ -7,24 +7,27 @@ A full-stack **academic research repository** web application for the **Wesleyan
 The design aesthetic is **Academic Minimalism with Glassmorphism** — a light-mode, blue-centric palette using the Wesleyan BSIT Digital Repository design system.
 
 **Repository:** `MarksIT23/ReposIT-testing` (GitHub)  
-**Active Branch:** `testing` (Supabase migration in progress — **main branch is untouched**)
+**Repository:** `MarksIT23/ReposIT-testing` (GitHub)  
+**Active Branch:** `testing` (Supabase Cloud-native architecture active — synchronized with `origin/main`)
 
 ---
 
-## Current Status: ✅ Supabase Migration Complete
+## Current Status: ✅ Supabase Migration & Branch Sync Complete
 
 | Component | Status |
 |---|---|
 | Supabase Schema (PostgreSQL) | ✅ Applied & Verified |
-| Row Level Security (RLS) | ✅ All tables |
-| Supabase Auth | ✅ Live accounts seeded |
-| Supabase Storage (`capstones` bucket) | ✅ Configured |
-| Data Migration (SQLite → Supabase) | ✅ 12 cats, 9 faculty, 11 papers |
+| Row Level Security (RLS) | ✅ All tables active |
+| Supabase Auth & GoTrue Compatibility | ✅ Live accounts seeded, token columns patched to non-NULL |
+| Faculty Student Approval Flow | ✅ Active (email confirmation disabled in Supabase, managed via `profiles.account_status`) |
+| Supabase Storage (`capstones` bucket) | ✅ Configured & public manuscript URL operational |
+| Data Migration (SQLite → Supabase) | ✅ 12 cats, 9 faculty, 11 papers migrated |
 | Frontend Supabase client | ✅ `src/services/supabase.js` |
-| `AuthContext.jsx` → Supabase Auth | ✅ Complete |
-| `data.js` → Supabase PostgREST | ✅ Complete |
+| `AuthContext.jsx` → Supabase Auth | ✅ Complete with real-time profile sync |
+| `data.js` → Supabase PostgREST | ✅ Complete with filtering, pagination, and FTS |
 | `ProfilePage.jsx` → `supabase.auth.updateUser()` | ✅ |
 | Analytics (`byYear`, `byCategory`, `byProgram`, `topPapers`) | ✅ |
+| Main Branch Synchronization | ✅ Merged `origin/main` (About page, hero copy updates, docs) into `testing` |
 | Build & Lint (Vite + Oxlint) | ✅ 0 errors |
 
 ---
@@ -53,13 +56,13 @@ ReposIT CREST (React 19 + Vite SPA — Client-direct Supabase)
 │
 ├── Supabase Cloud (unaxchblqookqxmlxmyk)
 │   ├── PostgreSQL (public schema)
-│   │   ├── profiles         ← extends auth.users
+│   │   ├── profiles         ← extends auth.users (role, program, account_status)
 │   │   ├── categories       ← 12 research tracks (BSIT/BSCpE/BSECE)
 │   │   ├── faculty          ← 9 faculty members
 │   │   ├── research_records ← 11 capstone papers (+ FTS GIN index)
 │   │   ├── activities       ← audit trail
 │   │   └── drafts           ← student draft submissions
-│   ├── Supabase Auth        ← JWT sessions, onAuthStateChange
+│   ├── Supabase Auth        ← JWT sessions, onAuthStateChange (Email confirm disabled for faculty approval)
 │   └── Supabase Storage     ← capstones/ bucket (public PDFs)
 │
 ├── Frontend (Vite Dev Server :5173)
@@ -68,8 +71,8 @@ ReposIT CREST (React 19 + Vite SPA — Client-direct Supabase)
 │   ├── src/contexts/AuthContext.jsx ← Supabase Auth + profiles sync
 │   └── src/pages/               ← All routes (public + protected)
 │
-├── Vite Proxy → /api → localhost:3002 (Express/legacy, no longer primary)
-└── GitHub → origin/testing branch (main untouched)
+├── Legacy Backend (server/ — SQLite/Express, superseded by Supabase)
+└── GitHub → origin/testing branch (synchronized with origin/main)
 ```
 
 ## Routes
@@ -81,6 +84,7 @@ ReposIT CREST (React 19 + Vite SPA — Client-direct Supabase)
 | `/research/:id` | Public | `ResearchDetailPage.jsx` |
 | `/faculty` | Public | `FacultyPage.jsx` |
 | `/faculty/:id` | Public | `FacultyDetailPage.jsx` |
+| `/about` | Public | `AboutPage.jsx` |
 | `/auth` | Public | `AuthPage.jsx` |
 | `/dashboard` | student | `StudentDashboard.jsx` |
 | `/submit` | student | `SubmitResearch.jsx` |
@@ -118,17 +122,26 @@ See [`docs/database_cloud_infrastructure.md`](docs/database_cloud_infrastructure
 | `handle_new_user()` | Syncs `auth.users` INSERT → `public.profiles` |
 | `increment_paper_views(paper_id)` | Atomic view count RPC |
 
-### Seed Accounts (password: `password123`)
+### Seed & Test Accounts (password: `password123`)
 
-| Email | Role |
-|---|---|
-| `admin@wesleyan.edu.ph` | admin |
-| `maria.reyes@wesleyan.edu.ph` | faculty |
-| `aris.mendoza@wesleyan.edu.ph` | faculty |
-| `sofia.delgado@wesleyan.edu.ph` | faculty |
-| `alice.bautista@wesleyan.edu.ph` | student |
-| `joshua.ramos@wesleyan.edu.ph` | student |
-| `miguel.torres@wesleyan.edu.ph` | student |
+| Email | Role | Status / Notes |
+|---|---|---|
+| `admin@wesleyan.edu.ph` | admin | Active |
+| `maria.reyes@wesleyan.edu.ph` | faculty | Active |
+| `aris.mendoza@wesleyan.edu.ph` | faculty | Active |
+| `sofia.delgado@wesleyan.edu.ph` | faculty | Active |
+| `alice.bautista@wesleyan.edu.ph` | student | Active |
+| `joshua.ramos@wesleyan.edu.ph` | student | Active |
+| `miguel.torres@wesleyan.edu.ph` | student | Active |
+| `clark.mason@wesleyan.edu.ph` | student | `pending` (Test account for faculty approval flow) |
+
+### Important Auth Configuration & Gotchas
+
+1. **GoTrue Go Scanner Null-Safety:**
+   Direct SQL operations in `auth.users` must ensure that all character varying / text token columns (`confirmation_token`, `recovery_token`, `email_change`, `email_change_token_new`, `email_change_token_current`, `phone_change`, `phone_change_token`, `reauthentication_token`) are set to empty strings `''` rather than `NULL`. GoTrue's internal database driver fails with `"Database error querying schema"` when attempting to scan `NULL` values into string variables during login.
+
+2. **Faculty-Managed Student Approval Workflow:**
+   In the Supabase project Auth settings, email confirmation is disabled (`Enable email confirmations = OFF`). New student sign-ups automatically enter the repository with `account_status: pending` in `public.profiles`. The faculty or admin reviews and approves student registrations via the Faculty Portal (`/portal`) or Admin Console (`/admin/students`), setting `account_status = 'active'`, which gates login in `AuthContext.jsx`.
 
 ---
 
@@ -237,5 +250,5 @@ Oxlint: ✓ 0 errors on 47 files
 
 | Branch | State |
 |---|---|
-| `main` | **Untouched** — original SQLite/Express app |
-| `testing` | **Active** — Supabase cloud migration |
+| `main` | Production branch with core UI and documentation |
+| `testing` | **Active working branch** — Supabase Cloud-native migration, synced with `main` |
