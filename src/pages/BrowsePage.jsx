@@ -26,6 +26,23 @@ const STATUS_FILTERS = [
   { id: 'archived', label: 'Archived' },
 ];
 
+const SORT_OPTIONS = [
+  { id: '', label: 'Default order' },
+  { id: 'newest', label: 'Newest first' },
+  { id: 'oldest', label: 'Oldest first' },
+  { id: 'viewed', label: 'Most viewed' },
+  { id: 'cited', label: 'Most cited' },
+  { id: 'title', label: 'Title A–Z' },
+];
+
+const SORT_FNS = {
+  newest: (a, b) => (Number(b.year) || 0) - (Number(a.year) || 0),
+  oldest: (a, b) => (Number(a.year) || 0) - (Number(b.year) || 0),
+  viewed: (a, b) => (b.views || 0) - (a.views || 0),
+  cited: (a, b) => (b.citations || 0) - (a.citations || 0),
+  title: (a, b) => String(a.title || '').localeCompare(String(b.title || '')),
+};
+
 const PROGRAMS = [
   { id: '', label: 'All CECT Programs', icon: 'apps' },
   { id: 'BSIT', label: 'BS Information Technology', icon: 'terminal' },
@@ -51,6 +68,8 @@ export default function BrowsePage() {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedAdviser, setSelectedAdviser] = useState('');
+  const [sort, setSort] = useState('');
   const [page, setPage] = useState(1);
   const resultsRef = useRef(null);
   const { can } = useAuth();
@@ -85,17 +104,26 @@ export default function BrowsePage() {
   }, [search, selectedProgram, selectedCategory, selectedYear, selectedStatus, isStaff]);
 
   const years = [...new Set(papers.map((p) => p.year))].sort((a, b) => b - a);
+  const advisers = [...new Set(papers.map((p) => p.advisor).filter(Boolean))].sort((a, b) =>
+    String(a).localeCompare(String(b))
+  );
 
-  const totalPages = Math.max(1, Math.ceil(papers.length / PAGE_SIZE));
+  const orderedPapers = (() => {
+    const filtered = selectedAdviser ? papers.filter((p) => p.advisor === selectedAdviser) : papers;
+    const sortFn = SORT_FNS[sort];
+    return sortFn ? [...filtered].sort(sortFn) : filtered;
+  })();
+
+  const totalPages = Math.max(1, Math.ceil(orderedPapers.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const visiblePapers = papers.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const visiblePapers = orderedPapers.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const goToPage = (p) => {
     setPage(p);
     resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const hasActiveFilters = search || selectedProgram || selectedCategory || selectedYear || selectedStatus;
+  const hasActiveFilters = search || selectedProgram || selectedCategory || selectedYear || selectedStatus || selectedAdviser || sort;
 
   const clearAll = () => {
     setSearch('');
@@ -103,6 +131,8 @@ export default function BrowsePage() {
     setSelectedCategory('');
     setSelectedYear('');
     setSelectedStatus('');
+    setSelectedAdviser('');
+    setSort('');
   };
 
   const activeStamps = [
@@ -110,6 +140,12 @@ export default function BrowsePage() {
     selectedProgram && { key: 'program', label: selectedProgram, clear: () => { setSelectedProgram(''); setSelectedCategory(''); } },
     selectedCategory && { key: 'category', label: selectedCategory, clear: () => setSelectedCategory('') },
     selectedYear && { key: 'year', label: selectedYear, clear: () => setSelectedYear('') },
+    selectedAdviser && { key: 'adviser', label: selectedAdviser, clear: () => setSelectedAdviser('') },
+    sort && {
+      key: 'sort',
+      label: SORT_OPTIONS.find((s) => s.id === sort)?.label || sort,
+      clear: () => setSort(''),
+    },
     isStaff && selectedStatus && {
       key: 'status',
       label: STATUS_FILTERS.find((s) => s.id === selectedStatus)?.label || selectedStatus,
@@ -214,9 +250,30 @@ export default function BrowsePage() {
               </select>
             </label>
           )}
+          <label className={toolbarLabelClass}>
+            Adviser
+            <select value={selectedAdviser} onChange={(e) => { setSelectedAdviser(e.target.value); setPage(1); }} className={selectClass}>
+              <option value="">All advisers</option>
+              {advisers.map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className={toolbarLabelClass}>
+            Sort
+            <select value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }} className={selectClass}>
+              {SORT_OPTIONS.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <div className="ml-auto flex items-center gap-4">
             <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
-              Showing {visiblePapers.length} of {papers.length} {papers.length === 1 ? 'entry' : 'entries'}
+              Showing {visiblePapers.length} of {orderedPapers.length} {orderedPapers.length === 1 ? 'entry' : 'entries'}
             </span>
             {hasActiveFilters && (
               <button
@@ -251,7 +308,7 @@ export default function BrowsePage() {
         <div className="min-h-[300px] flex items-center justify-center">
           <div className="w-10 h-10 border-4 border-neutral-300 border-t-neutral-900 rounded-full animate-spin"></div>
         </div>
-      ) : papers.length === 0 ? (
+      ) : orderedPapers.length === 0 ? (
         <div className="border-t-2 border-neutral-900 pt-8 pb-4">
           <span className="material-symbols-outlined text-[40px] text-neutral-300 mb-3 block">folder_off</span>
           <h3 className="font-display text-[22px] font-bold text-neutral-900 mb-1">No research papers found</h3>
