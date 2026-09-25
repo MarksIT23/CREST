@@ -148,7 +148,7 @@ export default function AboutPage() {
             viewport={viewportOnce}
             className="grid grid-cols-1 gap-10 md:grid-cols-12"
           >
-            <ChapterRail eyebrow="The system" title="One pipeline, from draft to archive" />
+            <ChapterRail eyebrow="The system" title="One Pipeline, From Draft to Archive" />
             <motion.div variants={fadeUp} className="md:col-span-8 md:pt-[44px]">
               <p className="max-w-3xl text-[16px] leading-relaxed text-neutral-600 md:text-[17px]">
                 CREST — Capstone Research Electronic Storage and Tracking — is where CECT
