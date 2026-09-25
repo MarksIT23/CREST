@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getCategories, submitPaper, saveDraft, uploadPdf } from '../../services/data';
+import { getCategories, getFaculty, submitPaper, saveDraft, uploadPdf } from '../../services/data';
 import { useAuth } from '../../contexts/AuthContext';
 
 const STEPS = [
@@ -15,6 +15,8 @@ export default function SubmitResearch() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [categories, setCategories] = useState([]);
+  const [facultyList, setFacultyList] = useState([]);
+  const [facultyLoading, setFacultyLoading] = useState(true);
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -39,6 +41,13 @@ export default function SubmitResearch() {
   useEffect(() => {
     getCategories({ program: form.program }).then(setCategories);
   }, [form.program]);
+
+  useEffect(() => {
+    getFaculty()
+      .then((data) => setFacultyList(Array.isArray(data) ? data : []))
+      .catch(() => setFacultyList([]))
+      .finally(() => setFacultyLoading(false));
+  }, []);
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -94,6 +103,14 @@ export default function SubmitResearch() {
         setError('Please fill in the paper title, abstract, and select a research track.');
         return false;
       }
+      if (!form.thesisNumber.trim()) {
+        setError('Please enter the thesis number for this capstone.');
+        return false;
+      }
+      if (!form.advisor) {
+        setError('Please select a research adviser for this capstone.');
+        return false;
+      }
     }
     if (step === 1) {
       if (!form.authors.some((a) => a.trim())) {
@@ -139,13 +156,13 @@ export default function SubmitResearch() {
     try {
       await submitPaper({
         title: form.title.trim(),
-        thesisNumber: form.thesisNumber.trim() || undefined,
+        thesisNumber: form.thesisNumber.trim(),
         program: form.program,
         abstract: form.abstract.trim(),
         category: form.category,
         year: Number(form.year),
         keywords: form.keywords.split(',').map((k) => k.trim()).filter(Boolean),
-        advisor: form.advisor.trim(),
+        advisor: form.advisor,
         sourceUrl: form.sourceUrl.trim(),
         pdfUrl: form.pdfUrl || '#',
         authors: form.authors.map((a) => a.trim()).filter(Boolean),
@@ -315,14 +332,13 @@ export default function SubmitResearch() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-[12px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Thesis Number (Optional)</label>
+                  <label className="block text-[12px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Thesis Number *</label>
                   <input
                     value={form.thesisNumber}
                     onChange={(e) => set('thesisNumber', e.target.value)}
                     placeholder={form.program === 'BSCpE' ? 'e.g. WU-CECT-CPE-2025-001' : form.program === 'BSECE' ? 'e.g. WU-CECT-ECE-2025-001' : 'e.g. WU-CECT-IT-2025-001'}
                     className={inputCls}
                   />
-                  <span className="text-[11px] text-neutral-500 mt-1 block">Auto-generated if left blank.</span>
                 </div>
                 <div>
                   <label className="block text-[12px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Research Track / Category *</label>
@@ -383,8 +399,23 @@ export default function SubmitResearch() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-[12px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Research Adviser</label>
-                  <input value={form.advisor} onChange={(e) => set('advisor', e.target.value)} placeholder="e.g. Dr. Maria Reyes / Engr. Aris Mendoza" className={inputCls} />
+                  <label className="block text-[12px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Research Adviser *</label>
+                  <select
+                    value={form.advisor}
+                    onChange={(e) => set('advisor', e.target.value)}
+                    className={inputCls}
+                    disabled={facultyLoading}
+                  >
+                    <option value="">{facultyLoading ? 'Loading advisers...' : 'Select adviser...'}</option>
+                    {[...facultyList]
+                      .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+                      .map((f) => (
+                        <option key={f.id} value={f.name}>
+                          {f.name}{f.department ? ` — ${f.department}` : ''}
+                        </option>
+                      ))}
+                    <option value="To be assigned">To be assigned</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-[12px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Publication Year</label>
@@ -457,7 +488,7 @@ export default function SubmitResearch() {
                   </div>
                   <div>
                     <div className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Thesis Number</div>
-                    <div className="font-mono">{form.thesisNumber || '(Auto-generated)'}</div>
+                    <div className="font-mono">{form.thesisNumber}</div>
                   </div>
                   <div>
                     <div className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Publication Year</div>
@@ -469,7 +500,7 @@ export default function SubmitResearch() {
                   </div>
                   <div>
                     <div className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Adviser</div>
-                    <div>{form.advisor || '—'}</div>
+                    <div>{form.advisor}</div>
                   </div>
                 </div>
 
