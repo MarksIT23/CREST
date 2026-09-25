@@ -169,11 +169,9 @@ export default function AdminAnalytics() {
       </div>
 
       {/* Summary strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 gap-5">
         {[
           { label: 'Total Papers', value: data.totalPapers, icon: 'description' },
-          { label: 'Total Views', value: data.totalViews.toLocaleString(), icon: 'visibility' },
-          { label: 'Total Citations', value: data.totalCitations.toLocaleString(), icon: 'menu_book' },
           { label: 'Approval Rate', value: data.totalPapers ? `${Math.round((data.approvedCount / data.totalPapers) * 100)}%` : '0%', icon: 'task_alt' },
         ].map((s) => (
           <div key={s.label} className="glass-card rounded-3xl p-6 text-center">
