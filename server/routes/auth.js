@@ -69,8 +69,6 @@ router.post('/login', async (req, res) => {
       role: user.role,
       program: user.program,
       studentId: user.studentId,
-      year: user.year,
-      section: user.section,
       bio: user.bio,
       accountStatus: user.accountStatus,
       joinedAt: user.createdAt.toISOString(),
@@ -87,7 +85,7 @@ router.post('/login', async (req, res) => {
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, role, program, studentId, year, section } = req.body;
+    const { name, email, password, role, program, studentId } = req.body;
     if (!name || !email || !password) {
       return res.status(400).json({ ok: false, error: 'Name, email, and password are required.' });
     }
@@ -119,8 +117,6 @@ router.post('/register', async (req, res) => {
         role: chosenRole,
         program: chosenProgram,
         studentId: chosenRole === 'student' ? studentId || '' : '',
-        year: chosenRole === 'student' ? year || '4th Year' : '',
-        section: chosenRole === 'student' ? section || '' : '',
         accountStatus: 'pending',
       },
     });
@@ -188,8 +184,6 @@ router.patch('/profile', async (req, res) => {
       role: updated.role,
       program: updated.program,
       studentId: updated.studentId,
-      year: updated.year,
-      section: updated.section,
       bio: updated.bio,
     });
   } catch (error) {

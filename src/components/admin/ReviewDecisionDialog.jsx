@@ -7,18 +7,18 @@ const APPROVE_CHECKS = [
   { id: 'originality', label: 'Originality cleared', hint: 'Plagiarism / similarity check reviewed' },
 ];
 
-const REJECT_REASONS = [
+const PENDING_REASONS = [
   'Incomplete submission',
   'Scope / quality concerns',
   'Metadata issues',
-  'Duplicate entry',
+  'Needs revision',
   'Other',
 ];
 
 /**
- * Stepped review gate for approve / reject decisions.
+ * Stepped review gate for approve / pending decisions.
  * Approve: verify checklist -> record (approver + remarks) -> type-to-confirm.
- * Reject: reason (category + details) -> confirm.
+ * Pending: reason (category + details) -> confirm.
  * The dialog composes an audit note; the parent persists it via updatePaperStatus.
  */
 export default function ReviewDecisionDialog({ paper, decision, reviewerName, onClose, onConfirm }) {
@@ -27,16 +27,16 @@ export default function ReviewDecisionDialog({ paper, decision, reviewerName, on
   const [checks, setChecks] = useState({ manuscript: false, metadata: false, originality: false });
   const [remarks, setRemarks] = useState('');
   const [typed, setTyped] = useState('');
-  const [reasonCategory, setReasonCategory] = useState(REJECT_REASONS[0]);
+  const [reasonCategory, setReasonCategory] = useState(PENDING_REASONS[0]);
   const [reasonDetails, setReasonDetails] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
   const allChecked = Object.values(checks).every(Boolean);
   const reasonValid = reasonDetails.trim().length >= 10;
-  const confirmTyped = typed.trim().toUpperCase() === 'APPROVE';
+  const confirmTyped = typed.trim().toUpperCase() === 'APPROVED';
 
-  const steps = isApprove ? ['Verify', 'Record', 'Confirm'] : ['Reason', 'Confirm'];
+  const steps = isApprove ? ['Verify', 'Record', 'Confirm'] : ['Remark', 'Confirm'];
   const lastStep = steps.length - 1;
 
   const canNext = () => {
@@ -49,14 +49,20 @@ export default function ReviewDecisionDialog({ paper, decision, reviewerName, on
       const base = `Verified: manuscript, metadata, originality. Decision by ${reviewerName}.`;
       return remarks.trim() ? `${base} Remarks: ${remarks.trim()}` : base;
     }
-    return `Decision by ${reviewerName}. Reason [${reasonCategory}]: ${reasonDetails.trim()}`;
+    return `Decision by ${reviewerName}. Pending reason [${reasonCategory}]: ${reasonDetails.trim()}`;
+  };
+
+  // The student-visible remark (stored as review_note in research_records)
+  const buildPendingRemark = () => {
+    if (isApprove) return null;
+    return `[${reasonCategory}] ${reasonDetails.trim()}`;
   };
 
   const handleConfirm = async () => {
     setBusy(true);
     setError('');
     try {
-      await onConfirm(buildNote());
+      await onConfirm(buildNote(), buildPendingRemark());
       onClose();
     } catch {
       setError('Could not record the decision. Please try again.');
@@ -73,7 +79,7 @@ export default function ReviewDecisionDialog({ paper, decision, reviewerName, on
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label={isApprove ? 'Review for approval' : 'Review for rejection'}
+      aria-label={isApprove ? 'Review for approval' : 'Review for pending'}
     >
       <div
         className="w-full max-w-lg bg-[#fcfcf7] rounded-3xl border border-neutral-200 shadow-2xl overflow-hidden"
@@ -82,10 +88,10 @@ export default function ReviewDecisionDialog({ paper, decision, reviewerName, on
         {/* Header */}
         <div className="px-6 md:px-8 pt-6 pb-5 border-b border-neutral-200">
           <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.25em] text-neutral-400">
-            {isApprove ? 'Approval review' : 'Rejection review'}
+            {isApprove ? 'Approval review' : 'Pending review'}
           </p>
           <h2 className="mt-1 font-display text-[22px] font-bold text-neutral-900">
-            {isApprove ? 'Approve this capstone?' : 'Reject this capstone?'}
+            {isApprove ? 'Approve this capstone?' : 'Mark as Pending?'}
           </h2>
           {/* Stepper */}
           <div className="mt-4 flex items-center gap-2">
@@ -181,12 +187,12 @@ export default function ReviewDecisionDialog({ paper, decision, reviewerName, on
               </div>
               <div>
                 <label className="block font-mono text-[11px] font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
-                  Type APPROVE to confirm
+                  Type APPROVED to confirm
                 </label>
                 <input
                   value={typed}
                   onChange={(e) => setTyped(e.target.value)}
-                  placeholder="APPROVE"
+                  placeholder="APPROVED"
                   autoComplete="off"
                   className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 font-mono text-[14px] font-bold uppercase tracking-widest text-neutral-900 outline-none focus:border-neutral-900"
                 />
@@ -197,7 +203,7 @@ export default function ReviewDecisionDialog({ paper, decision, reviewerName, on
           {!isApprove && step === 0 && (
             <div className="space-y-4">
               <p className="text-[14px] text-neutral-600">
-                A reason is <span className="font-bold text-neutral-900">required</span> — it is logged permanently and helps the authors revise.
+                A pending remark is <span className="font-bold text-neutral-900">required</span> — it is shown to the student and logged for revision guidance.
               </p>
               <div>
                 <label className="block font-mono text-[11px] font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
@@ -208,20 +214,20 @@ export default function ReviewDecisionDialog({ paper, decision, reviewerName, on
                   onChange={(e) => setReasonCategory(e.target.value)}
                   className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-[14px] text-neutral-900 outline-none focus:border-neutral-900"
                 >
-                  {REJECT_REASONS.map((r) => (
+                  {PENDING_REASONS.map((r) => (
                     <option key={r} value={r}>{r}</option>
                   ))}
                 </select>
               </div>
               <div>
                 <label className="block font-mono text-[11px] font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
-                  Details <span className="text-neutral-400 font-medium normal-case tracking-normal">(min. 10 characters)</span>
+                  Remark <span className="text-neutral-400 font-medium normal-case tracking-normal">(min. 10 characters — visible to student)</span>
                 </label>
                 <textarea
                   value={reasonDetails}
                   onChange={(e) => setReasonDetails(e.target.value)}
                   rows={4}
-                  placeholder="Explain what must change before this can be approved…"
+                  placeholder="Explain what must change before this paper can be approved…"
                   className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-[14px] text-neutral-900 outline-none focus:border-neutral-900 resize-none"
                 />
               </div>
@@ -229,9 +235,9 @@ export default function ReviewDecisionDialog({ paper, decision, reviewerName, on
           )}
 
           {!isApprove && step === 1 && (
-            <div className="rounded-2xl bg-red-50 border border-red-200 p-4 text-[13px] leading-relaxed text-red-900">
-              <span className="font-bold">This will reject</span> “{paper.title}” as decided by {reviewerName}.
-              <span className="block mt-1">Reason [{reasonCategory}]: {reasonDetails.trim()}</span>
+            <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 text-[13px] leading-relaxed text-amber-900">
+              <span className="font-bold">This will mark as pending</span> “{paper.title}” as decided by {reviewerName}.
+              <span className="block mt-1">Pending Reason [{reasonCategory}]: {reasonDetails.trim()}</span>
             </div>
           )}
 
@@ -279,9 +285,9 @@ export default function ReviewDecisionDialog({ paper, decision, reviewerName, on
             <button
               onClick={handleConfirm}
               disabled={busy}
-              className="px-6 py-3 rounded-full text-[13px] font-bold bg-red-700 text-white hover:bg-red-600 transition-all active:scale-95 disabled:opacity-40"
+              className="px-6 py-3 rounded-full text-[13px] font-bold bg-amber-600 text-white hover:bg-amber-500 transition-all active:scale-95 disabled:opacity-40"
             >
-              {busy ? 'Recording…' : 'Confirm rejection'}
+              {busy ? 'Recording…' : 'Mark as Pending'}
             </button>
           )}
         </div>

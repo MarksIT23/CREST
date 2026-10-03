@@ -16,6 +16,7 @@ function formatPaper(p) {
     submittedAt: p.submitted_at || p.submittedAt || p.created_at,
     createdAt: p.created_at || p.createdAt,
     updatedAt: p.updated_at || p.updatedAt,
+    reviewNote: p.review_note || p.reviewNote || null,
     authors: Array.isArray(p.authors) ? p.authors : (typeof p.authors === 'string' ? JSON.parse(p.authors || '[]') : []),
     keywords: Array.isArray(p.keywords) ? p.keywords : (typeof p.keywords === 'string' ? JSON.parse(p.keywords || '[]') : []),
   };
@@ -169,10 +170,18 @@ export async function updatePaper(id, patch) {
   return formatPaper(data);
 }
 
-export async function updatePaperStatus(id, status, reviewer = 'Admin') {
+export async function updatePaperStatus(id, status, reviewer = 'Admin', note = null) {
+  const updatePayload = { status, updated_at: new Date().toISOString() };
+  // Store pending remark on the paper record (visible to student dashboard)
+  if (status === 'pending' && note) {
+    updatePayload.review_note = note;
+  } else if (status === 'approved') {
+    updatePayload.review_note = null; // Clear remark when approved
+  }
+
   const { data, error } = await supabase
     .from('research_records')
-    .update({ status, updated_at: new Date().toISOString() })
+    .update(updatePayload)
     .eq('id', id)
     .select()
     .single();
@@ -181,8 +190,8 @@ export async function updatePaperStatus(id, status, reviewer = 'Admin') {
 
   try {
     await supabase.from('activities').insert({
-      type: status === 'approved' ? 'approval' : 'rejection',
-      detail: `${status === 'approved' ? 'approved' : 'declined'} research manuscript "${data.title}"`,
+      type: status === 'approved' ? 'approval' : status === 'pending' ? 'pending' : 'rejection',
+      detail: `${status === 'approved' ? 'approved' : status === 'pending' ? 'marked as pending' : 'declined'} research manuscript "${data.title}"`,
       user_name: reviewer,
     });
   } catch {
@@ -397,8 +406,6 @@ export async function getStudents(filters = {}) {
       role: p.role,
       program: p.program,
       studentId: p.student_id,
-      year: p.year,
-      section: p.section,
       accountStatus: p.account_status,
       bio: p.bio,
       createdAt: p.created_at,
@@ -440,8 +447,6 @@ export async function addStudent(student) {
       role: 'student',
       program: student.program,
       student_id: student.studentId,
-      year: student.year,
-      section: student.section,
       account_status: student.accountStatus || 'active',
       bio: student.bio,
     })

@@ -150,6 +150,16 @@ export default function ResearchDetailPage() {
                 </div>
               </div>
             </div>
+
+            {paper.status === 'pending' && paper.reviewNote && (
+              <div className="mb-8 rounded-2xl bg-amber-50 border border-amber-200 p-4 text-[14px] text-amber-900 flex items-start gap-3">
+                <span className="material-symbols-outlined text-[20px] text-amber-600 shrink-0 mt-0.5">pending_actions</span>
+                <div>
+                  <div className="font-bold text-amber-900">Reviewer Remark (Revision Required)</div>
+                  <div className="mt-1 leading-relaxed text-amber-800">{paper.reviewNote}</div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Abstract */}

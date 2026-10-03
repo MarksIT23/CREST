@@ -25,8 +25,6 @@ export function AuthProvider({ children }) {
           role: profile.role,
           program: profile.program,
           studentId: profile.student_id,
-          year: profile.year,
-          section: profile.section,
           accountStatus: profile.account_status,
           bio: profile.bio,
           avatarUrl: profile.avatar_url,
@@ -44,8 +42,6 @@ export function AuthProvider({ children }) {
       role: authUser.user_metadata?.role || 'student',
       program: authUser.user_metadata?.program,
       studentId: authUser.user_metadata?.studentId,
-      year: authUser.user_metadata?.year,
-      section: authUser.user_metadata?.section,
       accountStatus: authUser.user_metadata?.accountStatus || 'active',
       bio: authUser.user_metadata?.bio,
     };
@@ -125,7 +121,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const register = async ({ name, email, password, role, program, studentId, year, section }) => {
+  const register = async ({ name, email, password, role, program, studentId }) => {
     if (!name || !email || !password) return { ok: false, error: 'All fields are required.' };
 
     try {
@@ -141,8 +137,6 @@ export function AuthProvider({ children }) {
             role: role || 'student',
             program,
             studentId,
-            year,
-            section,
             accountStatus,
           },
         },
@@ -199,8 +193,6 @@ export function AuthProvider({ children }) {
       if (patch.name) updates.name = patch.name;
       if (patch.bio !== undefined) updates.bio = patch.bio;
       if (patch.program) updates.program = patch.program;
-      if (patch.year) updates.year = patch.year;
-      if (patch.section) updates.section = patch.section;
 
       const { data, error } = await supabase
         .from('profiles')
@@ -215,8 +207,6 @@ export function AuthProvider({ children }) {
           name: data.name,
           bio: data.bio,
           program: data.program,
-          year: data.year,
-          section: data.section,
         };
         setUser(nextUser);
         localStorage.setItem('crest_user', JSON.stringify(nextUser));

@@ -20,8 +20,6 @@ router.get('/', async (req, res) => {
         email: true,
         program: true,
         studentId: true,
-        year: true,
-        section: true,
         bio: true,
         accountStatus: true,
         createdAt: true,
@@ -38,7 +36,7 @@ router.get('/', async (req, res) => {
 // POST /api/students
 router.post('/', async (req, res) => {
   try {
-    const { name, email, studentId, year, section, program, password, creator } = req.body;
+    const { name, email, studentId, program, password, creator } = req.body;
     if (!name || !email) {
       return res.status(400).json({ error: 'Name and email are required.' });
     }
@@ -57,8 +55,6 @@ router.post('/', async (req, res) => {
         name,
         email: email.toLowerCase(),
         studentId: studentId || '',
-        year: year || '4th Year',
-        section: section || '',
         program: program || (studentId && studentId.includes('ECE') ? 'BSECE' : studentId && studentId.includes('CPE') ? 'BSCpE' : 'BSIT'),
         role: 'student',
         password: hashedPassword,
@@ -80,8 +76,6 @@ router.post('/', async (req, res) => {
       email: created.email,
       program: created.program,
       studentId: created.studentId,
-      year: created.year,
-      section: created.section,
       accountStatus: created.accountStatus,
     });
   } catch (error) {

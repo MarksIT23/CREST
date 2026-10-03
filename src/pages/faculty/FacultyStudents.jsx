@@ -8,7 +8,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 const STATUS_TABS = [
   { id: 'pending',  label: 'Pending Approval', icon: 'pending_actions' },
   { id: 'active',   label: 'Active',            icon: 'check_circle'   },
-  { id: 'rejected', label: 'Rejected',          icon: 'cancel'          },
+  { id: 'rejected', label: 'Deactivated',       icon: 'person_off'     },
 ];
 
 const PROGRAMS = [
@@ -23,7 +23,7 @@ const PROGRAM_BADGE = {
   BSECE: 'bg-neutral-900/5 text-neutral-900 border border-neutral-200',
 };
 
-const EMPTY_FORM = { name: '', email: '', studentId: '', program: 'BSIT', year: '1st Year', section: '' };
+const EMPTY_FORM = { name: '', email: '', studentId: '', program: 'BSIT' };
 
 export default function FacultyStudents() {
   const { user } = useAuth();
@@ -77,17 +77,17 @@ export default function FacultyStudents() {
 
   const doReject = async (id, name) => {
     await updateStudentAccountStatus(id, 'rejected', user?.name);
-    showToast(`${name}'s account has been set to rejected.`);
+    showToast(`${name}'s account has been deactivated.`);
     refresh();
   };
 
   const doReinstate = async (id, name) => {
     await updateStudentAccountStatus(id, 'active', user?.name);
-    showToast(`${name}'s account has been reinstated.`);
+    showToast(`✓ ${name}'s account has been reactivated.`);
     refresh();
   };
 
-  const detailOf = (s) => [s.studentId, s.program, [s.year, s.section].filter(Boolean).join(' ')].filter(Boolean).join(' · ');
+  const detailOf = (s) => [s.studentId, s.program].filter(Boolean).join(' · ');
 
   const askApprove = (s) => setPending({
     tone: 'approve',
@@ -100,27 +100,24 @@ export default function FacultyStudents() {
   });
 
   const askReject = (s) => {
-    const verb = tab === 'active' ? 'Deactivate' : 'Reject';
     setPending({
       tone: 'danger',
-      icon: 'cancel',
-      title: `${verb} ${s.name}'s account?`,
-      message: tab === 'active'
-        ? 'The student will be signed out and blocked from signing in until reinstated.'
-        : 'The registration will be rejected. The student will stay blocked until reinstated.',
+      icon: 'person_off',
+      title: `Deactivate ${s.name}'s account?`,
+      message: 'The student will be blocked from signing in until the account is reactivated.',
       detail: detailOf(s),
-      confirmLabel: `${verb} account`,
+      confirmLabel: 'Deactivate account',
       onConfirm: () => doReject(s.id, s.name),
     });
   };
 
   const askReinstate = (s) => setPending({
     tone: 'neutral',
-    icon: 'undo',
-    title: `Reinstate ${s.name}?`,
-    message: 'The account will be activated again with full student access.',
+    icon: 'replay',
+    title: `Reactivate ${s.name}?`,
+    message: 'The account will be reactivated with full student access.',
     detail: detailOf(s),
-    confirmLabel: 'Reinstate account',
+    confirmLabel: 'Reactivate account',
     onConfirm: () => doReinstate(s.id, s.name),
   });
 
@@ -221,14 +218,6 @@ export default function FacultyStudents() {
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <select value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} className={inputCls}>
-                {['1st Year', '2nd Year', '3rd Year', '4th Year', 'Graduate', 'Alumni'].map((y) => (
-                  <option key={y}>{y}</option>
-                ))}
-              </select>
-              <input required placeholder="Section" value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value })} className={inputCls} />
-            </div>
             <div className="flex gap-3 pt-2">
               <button type="submit" className="flex-1 bg-neutral-900 text-white py-3 rounded-full text-[14px] font-bold hover:bg-neutral-700 transition-all">
                 Add Student
@@ -251,12 +240,16 @@ export default function FacultyStudents() {
           <span className="material-symbols-outlined text-[48px] text-neutral-300 mb-3 block">
             {currentTab?.icon || 'inbox'}
           </span>
-          <p className="font-display text-[18px] font-bold mb-1 text-neutral-900">No {tab} accounts found</p>
+          <p className="font-display text-[18px] font-bold mb-1 text-neutral-900">
+            {tab === 'rejected' ? 'No deactivated accounts found' : `No ${tab} accounts found`}
+          </p>
           <p className="text-neutral-500 text-[13px]">
             {tab === 'pending'
               ? 'No student registrations are waiting for approval.'
               : search
               ? `No matching student accounts found for "${search}".`
+              : tab === 'rejected'
+              ? 'No deactivated student accounts found.'
               : `No ${tab} student accounts found.`}
           </p>
         </div>
@@ -266,10 +259,9 @@ export default function FacultyStudents() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-neutral-200 text-[12px] uppercase tracking-wider text-neutral-500">
-                  <th className="px-6 py-4 font-bold">Student</th>
+                  <th className="px-6 py-4 font-bold">Student ID</th>
+                  <th className="px-6 py-4 font-bold">Name</th>
                   <th className="px-4 py-4 font-bold">Program</th>
-                  <th className="px-4 py-4 font-bold">Student ID</th>
-                  <th className="px-4 py-4 font-bold">Year / Section</th>
                   <th className="px-4 py-4 font-bold">Registered</th>
                   <th className="px-6 py-4 font-bold text-right">Actions</th>
                 </tr>
@@ -277,6 +269,7 @@ export default function FacultyStudents() {
               <tbody>
                 {filteredStudents.map((s) => (
                   <tr key={s.id} className="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                    <td className="px-6 py-4 text-[13px] font-mono font-bold text-neutral-700">{s.studentId || '—'}</td>
                     <td className="px-6 py-4">
                       <div className="font-bold text-[14px] text-neutral-900">{s.name}</div>
                       <div className="text-[12px] text-neutral-500">{s.email}</div>
@@ -285,12 +278,6 @@ export default function FacultyStudents() {
                       <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${PROGRAM_BADGE[s.program] || 'bg-neutral-100 text-neutral-500'}`}>
                         {s.program || '—'}
                       </span>
-                    </td>
-                    <td className="px-4 py-4 text-[13px] font-mono text-neutral-500">
-                      {s.studentId || '—'}
-                    </td>
-                    <td className="px-4 py-4 text-[13px] text-neutral-500">
-                      {s.year || '—'}{s.section ? ` · ${s.section}` : ''}
                     </td>
                     <td className="px-4 py-4 text-[12px] text-neutral-500">
                       {new Date(s.createdAt).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })}
@@ -309,8 +296,8 @@ export default function FacultyStudents() {
                             onClick={() => askReject(s)}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-600 border border-red-200 rounded-lg text-[12px] font-bold hover:bg-red-50 transition-colors"
                           >
-                            <span className="material-symbols-outlined text-[16px]">cancel</span>
-                            Reject
+                            <span className="material-symbols-outlined text-[16px]">person_off</span>
+                            Deactivate
                           </button>
                         </div>
                       )}
@@ -329,8 +316,8 @@ export default function FacultyStudents() {
                           onClick={() => askReinstate(s)}
                           className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-900 text-white rounded-full text-[12px] font-bold hover:bg-neutral-700 transition-colors ml-auto"
                         >
-                          <span className="material-symbols-outlined text-[16px]">undo</span>
-                          Reinstate
+                          <span className="material-symbols-outlined text-[16px]">replay</span>
+                          Reactivate
                         </button>
                       )}
                     </td>

@@ -32,9 +32,6 @@ const PANEL_PROGRAMS = [
   { label: 'BS Electronics Engineering', icon: 'electric_bolt' },
 ];
 
-const selectCls =
-  'w-full bg-transparent border-0 border-b-2 border-neutral-200 focus:border-neutral-900 outline-none transition-colors text-[16px] text-neutral-900 py-2.5 pr-2 rounded-none cursor-pointer';
-
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -49,8 +46,6 @@ export default function AuthPage() {
   const [step, setStep] = useState(1);
   const [stepDir, setStepDir] = useState(1);
   const [studentId, setStudentId] = useState('');
-  const [yearLevel, setYearLevel] = useState('');
-  const [section, setSection] = useState('');
 
   const FLOW = role === 'student'
     ? [
@@ -91,8 +86,6 @@ export default function AuthPage() {
             role,
             program,
             studentId: role === 'student' ? studentId : '',
-            year: role === 'student' ? yearLevel : '',
-            section: role === 'student' ? section : '',
           });
 
       if (!result.ok) {
@@ -405,36 +398,6 @@ export default function AuthPage() {
                     pattern="[0-9]{2}-[0-9]{4}-[0-9]{3}"
                     title="Student ID format: 23-1037-310"
                   />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelCls}>Year Level</label>
-                  <select
-                    required
-                    value={yearLevel}
-                    onChange={(e) => setYearLevel(e.target.value)}
-                    className={selectCls}
-                  >
-                    <option value="">Select…</option>
-                    {['1st Year', '2nd Year', '3rd Year', '4th Year'].map((y) => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className={labelCls}>Section</label>
-                  <div className="relative">
-                    <span className={iconCls}>group</span>
-                    <input
-                      type="text"
-                      value={section}
-                      onChange={(e) => setSection(e.target.value)}
-                      className={inputCls}
-                      placeholder="BSIT-4A"
-                    />
-                  </div>
                 </div>
               </div>
             </>

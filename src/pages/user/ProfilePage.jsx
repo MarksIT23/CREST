@@ -6,8 +6,6 @@ import { supabase } from '../../services/supabase';
 import { getPaperById } from '../../services/data';
 import useSavedPapers from '../../hooks/useSavedPapers';
 
-const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Graduate', 'Alumni'];
-
 function InputField({ label, children }) {
   return (
     <div>
@@ -131,8 +129,6 @@ export default function ProfilePage() {
   const [form, setForm] = useState({
     name:      user?.name      || '',
     studentId: user?.studentId || '',
-    year:      user?.year      || '',
-    section:   user?.section   || '',
     bio:       user?.bio       || '',
   });
   const [profileSaved, setProfileSaved] = useState(false);
@@ -247,11 +243,6 @@ export default function ProfilePage() {
                   {user.program}
                 </span>
               )}
-              {user?.year && (
-                <span className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-white/10 border border-white/10 text-white/80">
-                  {user.year}
-                </span>
-              )}
             </div>
           </div>
         </div>
@@ -318,15 +309,6 @@ export default function ProfilePage() {
                         <input value={form.studentId} onChange={(e) => set('studentId', e.target.value)} placeholder="BSIT-2022-000" className={inputCls} />
                       </InputField>
                     </div>
-                    <InputField label="Year">
-                      <select value={form.year} onChange={(e) => set('year', e.target.value)} className={inputCls}>
-                        <option value="">Select year...</option>
-                        {YEARS.map((y) => <option key={y}>{y}</option>)}
-                      </select>
-                    </InputField>
-                    <InputField label="Section">
-                      <input value={form.section} onChange={(e) => set('section', e.target.value)} placeholder="BSIT-4A" className={inputCls} />
-                    </InputField>
                   </div>
                 </>
               )}

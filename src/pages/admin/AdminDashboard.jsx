@@ -48,9 +48,9 @@ export default function AdminDashboard() {
     );
   }, []);
 
-  const confirmDecision = async (note) => {
+  const confirmDecision = async (note, pendingRemark) => {
     if (!dialog) return;
-    await updatePaperStatus(dialog.paper.id, dialog.decision, user?.name || 'Administrator', note);
+    await updatePaperStatus(dialog.paper.id, dialog.decision, user?.name || 'Administrator', pendingRemark || note);
     const [a, acts, pendingPapers] = await Promise.all([getAnalytics(), getActivities(8), getPapers({ status: 'pending' })]);
     setAnalytics(a);
     setActivities(acts);
@@ -121,10 +121,10 @@ export default function AdminDashboard() {
                       View
                     </Link>
                     <button
-                      onClick={() => setDialog({ paper, decision: 'rejected' })}
-                      className="px-4 py-2 rounded-full text-[13px] font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                      onClick={() => setDialog({ paper, decision: 'pending' })}
+                      className="px-4 py-2 rounded-full text-[13px] font-medium bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors"
                     >
-                      Reject
+                      Pending
                     </button>
                     <button
                       onClick={() => setDialog({ paper, decision: 'approved' })}

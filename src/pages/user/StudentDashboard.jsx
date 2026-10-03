@@ -210,6 +210,15 @@ export default function StudentDashboard() {
                           </Link>
                         </div>
                       </div>
+                      {paper.status === 'pending' && paper.reviewNote && (
+                        <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2.5 text-[12px] text-amber-800">
+                          <span className="material-symbols-outlined text-[16px] mt-0.5 shrink-0 text-amber-600">pending_actions</span>
+                          <div>
+                            <span className="font-bold block text-amber-900">Reviewer remark:</span>
+                            <span className="leading-relaxed">{paper.reviewNote}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

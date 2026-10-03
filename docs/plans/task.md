@@ -20,3 +20,5 @@
 | **Task 16: Configure Faculty Approval & Auth Flow** | Completed | Disabled Supabase email confirmations to allow faculty-managed account approval (`pending` -> `active`) |
 | **Task 17: Modernize Project Plans & Documentation** | Completed | Analyzed and updated all project plan markdown files to reflect current Supabase Cloud setup |
 | **Task 18: Fetch and Merge Main into Testing Branch** | Completed | Fetched latest origin/main, merged into testing, resolved conflicts preserving all Supabase configs and dependencies |
+| **Task 19: UI, Text Validation, Paper Review, and Student Management Refactor** | Completed | Fixed "APPROVED" typo validation, simplified CTA labels ("Faculties", "Database"), replaced paper review "Reject" with "Pending" (mandatory remark + student dashboard feedback), removed Year Level & Block schemas, reordered student table columns (Student ID, Name, Program), and updated account management actions to "Deactivate" / "Reactivate" |
+

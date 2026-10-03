@@ -257,13 +257,13 @@ export default function AboutPage() {
                 to="/browse"
                 className="rounded-xl bg-neutral-900 px-8 py-4 text-[14px] font-bold text-white shadow-xl transition-all hover:bg-neutral-700 active:scale-95"
               >
-                Access Database
+                Database
               </Link>
               <Link
                 to="/faculty"
                 className="rounded-xl border-2 border-neutral-900 px-8 py-[14px] text-[14px] font-bold text-neutral-900 transition-all hover:bg-neutral-900 hover:text-white active:scale-95"
               >
-                Meet the Faculty
+                Faculties
               </Link>
             </div>
           </motion.section>

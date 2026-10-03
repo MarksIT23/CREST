@@ -15,8 +15,6 @@ model User {
   role          String   @default("student")   // student | faculty | admin
   program       String?                          // BSIT | BSCpE
   studentId     String?
-  year          String?
-  section       String?
   bio           String?
   accountStatus String   @default("pending")    // pending | active | rejected
   createdAt     DateTime @default(now())
@@ -37,6 +35,7 @@ model ResearchPaper {
   sourceUrl    String?
   pdfUrl       String?
   status       String   @default("pending") // pending | approved | rejected | archived
+  reviewNote   String?  // Reviewer remark shown to student when paper is pending
   views        Int      @default(0)
   citations    Int      @default(0)
   submittedBy  String?

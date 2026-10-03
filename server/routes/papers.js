@@ -220,9 +220,17 @@ router.patch('/:id/status', async (req, res) => {
     const { id } = req.params;
     const { status, reviewer, note } = req.body;
 
+    const updateData = { status };
+    // Store the remark on the paper so students can see it on their dashboard
+    if (status === 'pending' && note) {
+      updateData.reviewNote = note;
+    } else if (status === 'approved') {
+      updateData.reviewNote = null; // Clear note on approval
+    }
+
     const paper = await prisma.researchPaper.update({
       where: { id },
-      data: { status },
+      data: updateData,
     });
 
     // Record activity

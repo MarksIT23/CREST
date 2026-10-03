@@ -51,10 +51,10 @@ export default function AdminPapers() {
     setTimeout(() => setToast(''), 2500);
   };
 
-  const confirmDecision = async (note) => {
+  const confirmDecision = async (note, pendingRemark) => {
     if (!dialog) return;
-    await updatePaperStatus(dialog.paper.id, dialog.decision, user?.name || 'Administrator', note);
-    showToast(dialog.decision === 'approved' ? 'Paper approved and published.' : 'Paper rejected with reason logged.');
+    await updatePaperStatus(dialog.paper.id, dialog.decision, user?.name || 'Administrator', pendingRemark || note);
+    showToast(dialog.decision === 'approved' ? 'Paper approved and published.' : 'Paper marked as pending — remark logged.');
     refresh();
   };
 
@@ -262,11 +262,11 @@ export default function AdminPapers() {
                                 <span className="material-symbols-outlined text-[18px]">check_circle</span>
                               </button>
                               <button
-                                onClick={() => setDialog({ paper, decision: 'rejected' })}
-                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Reject"
+                                onClick={() => setDialog({ paper, decision: 'pending' })}
+                                className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                                title="Mark as Pending (with remark)"
                               >
-                                <span className="material-symbols-outlined text-[18px]">cancel</span>
+                                <span className="material-symbols-outlined text-[18px]">pending</span>
                               </button>
                             </>
                           )}

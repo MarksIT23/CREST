@@ -286,13 +286,13 @@ export default function HomePage() {
               to="/browse"
               className="rounded-xl bg-white px-8 py-4 text-[14px] font-bold text-neutral-900 shadow-xl transition-all hover:bg-white/90 active:scale-95"
             >
-              Access Database
+              Database
             </Link>
             <Link
               to="/faculty"
               className="rounded-xl border border-white/30 bg-white/10 px-8 py-4 text-[14px] font-bold text-white backdrop-blur-md transition-all hover:bg-white/20 active:scale-95"
             >
-              Meet the Faculty
+              Faculties
             </Link>
           </motion.div>
           <motion.div
@@ -608,7 +608,7 @@ export default function HomePage() {
                 to="/browse"
                 className="group inline-flex items-center gap-3 rounded-full bg-neutral-900 px-8 py-4 text-[14px] font-bold text-white transition-all hover:bg-neutral-700 active:scale-95"
               >
-                Access Database
+                Database
                 <span className="material-symbols-outlined text-[18px] transition-transform group-hover:translate-x-1">arrow_forward</span>
               </Link>
               <Link
