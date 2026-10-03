@@ -387,9 +387,9 @@ export default function HomePage() {
           <motion.section variants={staggerReveal} initial="hidden" whileInView="show" viewport={viewportOnce} className="mt-28 md:mt-36">
             <motion.div variants={fadeUp} className="mb-12">
               <div>
-                <p className="text-[12px] font-semibold uppercase tracking-[0.25em] text-neutral-400">The collection</p>
+                <p className="text-[12px] font-semibold uppercase tracking-[0.25em] text-neutral-400">The Collection</p>
                 <h2 className="mt-2 font-display text-[28px] font-bold text-neutral-900 md:text-[40px]">
-                  Start with a discipline,<br className="hidden md:block" /> end with a discovery
+                  Start with a Discipline,<br className="hidden md:block" /> End with a Discovery
                 </h2>
               </div>
             </motion.div>
@@ -499,7 +499,7 @@ export default function HomePage() {
               How it works
             </motion.p>
             <motion.h2 variants={fadeUp} className="mt-2 font-display text-[28px] font-bold text-neutral-900 md:text-[40px]">
-              From submission to searchable archive
+              From Submission to Searchable Archive
             </motion.h2>
             <div className="mt-12 grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-8">
               {[
@@ -522,7 +522,7 @@ export default function HomePage() {
             <motion.div variants={fadeUp} className="mb-4">
               <p className="text-[12px] font-semibold uppercase tracking-[0.25em] text-neutral-400">Programs</p>
               <h2 className="mt-2 font-display text-[28px] font-bold text-neutral-900 md:text-[40px]">
-                Three programs, one archive
+                Three Programs, One Archive
               </h2>
             </motion.div>
             <div className="grid grid-cols-1 gap-12 md:grid-cols-2 md:gap-0 md:divide-x md:divide-neutral-200">
@@ -566,7 +566,7 @@ export default function HomePage() {
               <div className="md:sticky md:top-28">
                 <p className="text-[12px] font-semibold uppercase tracking-[0.25em] text-neutral-400">About the archive</p>
                 <h2 className="mt-2 font-display text-[28px] font-bold leading-tight text-neutral-900 md:text-[40px]">
-                  The institutional memory of CECT capstones
+                  The Institutional Memory of CECT Capstones
                 </h2>
               </div>
             </motion.div>
@@ -598,7 +598,7 @@ export default function HomePage() {
               Get started
             </motion.p>
             <motion.h2 variants={fadeUp} className="mt-4 max-w-4xl font-display text-[40px] font-bold leading-[1.02] tracking-tight text-neutral-900 md:text-[72px]">
-              Your capstone belongs here.
+              Your Capstone Belongs Here.
             </motion.h2>
             <motion.p variants={fadeUp} className="mt-6 max-w-xl text-[16px] leading-relaxed text-neutral-600">
               Search the full database of peer-reviewed work — or submit your own capstone for faculty review and take your place in the archive.
@@ -615,7 +615,7 @@ export default function HomePage() {
                 to="/submit"
                 className="group inline-flex items-center gap-2 text-[15px] font-bold text-neutral-900 underline decoration-neutral-300 decoration-2 underline-offset-8 hover:decoration-neutral-900 transition-all"
               >
-                Submit your capstone
+                Submit your Capstone
                 <span className="material-symbols-outlined text-[18px] transition-transform group-hover:translate-x-1">arrow_outward</span>
               </Link>
             </motion.div>

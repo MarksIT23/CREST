@@ -17,8 +17,6 @@ const itemVariants = {
 const KPI_STYLES = [
   { icon: 'description', label: 'Total Papers', key: 'totalPapers', color: 'text-neutral-900 bg-neutral-900/5' },
   { icon: 'hourglass_top', label: 'Pending Review', key: 'pendingCount', color: 'text-amber-600 bg-amber-500/10' },
-  { icon: 'visibility', label: 'Total Views', key: 'totalViews', color: 'text-neutral-700 bg-neutral-500/10' },
-  { icon: 'menu_book', label: 'Citations', key: 'totalCitations', color: 'text-emerald-600 bg-emerald-500/10' },
 ];
 
 function timeAgo(iso) {
@@ -70,7 +68,7 @@ export default function AdminDashboard() {
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-8">
       {/* KPI cards */}
-      <motion.div variants={containerVariants} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+      <motion.div variants={containerVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         {KPI_STYLES.map((kpi) => (
           <motion.div key={kpi.key} variants={itemVariants} className="glass-card p-6 rounded-3xl flex items-center gap-4">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${kpi.color}`}>

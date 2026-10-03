@@ -36,11 +36,11 @@ export default function Navbar() {
   const portalIcon = user?.role === 'faculty' ? 'co_present' : 'admin_panel_settings';
   const initials = user
     ? user.name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase()
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase()
     : '';
 
   const linkBase = 'px-4 py-2 rounded-full text-[14px] font-semibold transition-all duration-200 whitespace-nowrap';
@@ -57,11 +57,10 @@ export default function Navbar() {
     <nav
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className={`w-full fixed top-0 z-50 transition-all duration-300 ${
-        barred
-          ? 'bg-[#fcfcf7]/90 backdrop-blur-md border-b border-neutral-900/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.10)]'
-          : 'bg-transparent border-b border-transparent'
-      }`}
+      className={`w-full fixed top-0 z-50 transition-all duration-300 ${barred
+        ? 'bg-[#fcfcf7]/90 backdrop-blur-md border-b border-neutral-900/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.10)]'
+        : 'bg-transparent border-b border-transparent'
+        }`}
     >
       <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-6 md:px-12 py-4">
         <Link to="/" className="flex shrink-0 items-center gap-2">
@@ -75,10 +74,10 @@ export default function Navbar() {
 
         <div className="flex flex-1 items-center justify-center gap-1 overflow-x-auto">
           <NavLink to="/browse" className={({ isActive }) => `${linkBase} ${linkTone(isActive)}`}>
-            Repositories
+            Repository
           </NavLink>
           <NavLink to="/faculty" className={({ isActive }) => `${linkBase} ${linkTone(isActive)}`}>
-            Faculties
+            Faculty
           </NavLink>
           <NavLink to="/about" className={({ isActive }) => `${linkBase} ${linkTone(isActive)}`}>
             About

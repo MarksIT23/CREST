@@ -9,6 +9,7 @@ import {
   updateFacultyAccountStatus,
 } from '../../services/data';
 import SearchBar from '../../components/SearchBar';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 const PROGRAMS = [
   { value: 'BSIT', label: 'Information Technology (BSIT)' },
@@ -33,6 +34,8 @@ export default function AdminStudents() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [toast, setToast] = useState('');
+  const [pending, setPending] = useState(null);
+  const [confirming, setConfirming] = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -80,44 +83,119 @@ export default function AdminStudents() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Remove this student account?')) return;
-    await deleteStudent(id);
-    showToast('Student removed.');
-    refresh();
+  const runPending = async () => {
+    if (!pending) return;
+    setConfirming(true);
+    try {
+      await pending.onConfirm();
+    } finally {
+      setConfirming(false);
+      setPending(null);
+    }
   };
 
-  const handleApprove = async (id, name) => {
+  const doApprove = async (id, name) => {
     await updateStudentAccountStatus(id, 'active', 'Administrator');
     showToast(`✓ ${name}'s account has been approved.`);
     refresh();
   };
 
-  const handleReject = async (id, name) => {
-    if (!window.confirm(`Reject ${name}'s account?`)) return;
+  const doReject = async (id, name) => {
     await updateStudentAccountStatus(id, 'rejected', 'Administrator');
     showToast(`${name}'s account has been rejected.`);
     refresh();
   };
 
-  const handleReinstate = async (id, name) => {
+  const doReinstate = async (id, name) => {
     await updateStudentAccountStatus(id, 'active', 'Administrator');
     showToast(`${name}'s account has been reinstated.`);
     refresh();
   };
 
-  const handleApproveFaculty = async (id, name) => {
+  const doDelete = async (id, name) => {
+    await deleteStudent(id);
+    showToast(`${name}'s account has been removed.`);
+    refresh();
+  };
+
+  const doApproveFaculty = async (id, name) => {
     await updateFacultyAccountStatus(id, 'active', 'Administrator');
     showToast(`✓ ${name}'s faculty account has been approved.`);
     refresh();
   };
 
-  const handleRejectFaculty = async (id, name) => {
-    if (!window.confirm(`Reject ${name}'s faculty account?`)) return;
+  const doRejectFaculty = async (id, name) => {
     await updateFacultyAccountStatus(id, 'rejected', 'Administrator');
     showToast(`${name}'s faculty account has been rejected.`);
     refresh();
   };
+
+  const studentDetail = (s) => [s.studentId, s.program, [s.year, s.section].filter(Boolean).join(' ')].filter(Boolean).join(' · ');
+
+  const askApprove = (s) => setPending({
+    tone: 'approve',
+    icon: 'check_circle',
+    title: `Approve ${s.name}?`,
+    message: 'Approving activates the account immediately. The student will be able to sign in and submit capstones.',
+    detail: studentDetail(s),
+    confirmLabel: 'Approve account',
+    onConfirm: () => doApprove(s.id, s.name),
+  });
+
+  const askReject = (s) => {
+    const verb = tab === 'active' ? 'Deactivate' : 'Reject';
+    setPending({
+      tone: 'danger',
+      icon: 'cancel',
+      title: `${verb} ${s.name}'s account?`,
+      message: tab === 'active'
+        ? 'The student will be signed out and blocked from signing in until reinstated.'
+        : 'The registration will be rejected. The student will stay blocked until reinstated.',
+      detail: studentDetail(s),
+      confirmLabel: `${verb} account`,
+      onConfirm: () => doReject(s.id, s.name),
+    });
+  };
+
+  const askReinstate = (s) => setPending({
+    tone: 'neutral',
+    icon: 'undo',
+    title: `Reinstate ${s.name}?`,
+    message: 'The account will be activated again with full student access.',
+    detail: studentDetail(s),
+    confirmLabel: 'Reinstate account',
+    onConfirm: () => doReinstate(s.id, s.name),
+  });
+
+  const askDelete = (s) => setPending({
+    tone: 'danger',
+    icon: 'delete',
+    title: `Remove ${s.name}?`,
+    message: 'The account and its record will be permanently removed. This cannot be undone.',
+    detail: s.email,
+    confirmLabel: 'Remove account',
+    onConfirm: () => doDelete(s.id, s.name),
+  });
+
+  const askApproveFaculty = (f) => setPending({
+    tone: 'approve',
+    icon: 'check_circle',
+    title: `Approve ${f.name} as faculty?`,
+    message: 'Approving grants portal access immediately — reviews, grading, and student approvals.',
+    detail: [f.email, f.program].filter(Boolean).join(' · '),
+    confirmLabel: 'Approve faculty',
+    onConfirm: () => doApproveFaculty(f.id, f.name),
+  });
+
+  const askRejectFaculty = (f) => setPending({
+    tone: 'danger',
+    icon: 'cancel',
+    title: `Reject ${f.name}'s faculty registration?`,
+    message: 'The registration will be rejected. They will stay blocked until reinstated.',
+    detail: f.email,
+    confirmLabel: 'Reject faculty',
+    onConfirm: () => doRejectFaculty(f.id, f.name),
+  });
 
   const inputCls =
     'w-full bg-white px-4 py-2.5 rounded-xl border border-neutral-200 text-[14px] text-neutral-900 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 transition-all';
@@ -179,14 +257,14 @@ export default function AdminStudents() {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <button
-                    onClick={() => handleApproveFaculty(f.id, f.name)}
+                    onClick={() => askApproveFaculty(f)}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-[12px] font-bold hover:bg-emerald-600 transition-colors"
                   >
                     <span className="material-symbols-outlined text-[16px]">check_circle</span>
                     Approve
                   </button>
                   <button
-                    onClick={() => handleRejectFaculty(f.id, f.name)}
+                    onClick={() => askRejectFaculty(f)}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-600 border border-red-200 rounded-lg text-[12px] font-bold hover:bg-red-50 transition-colors"
                   >
                     <span className="material-symbols-outlined text-[16px]">cancel</span>
@@ -322,14 +400,14 @@ export default function AdminStudents() {
                         {tab === 'pending' && (
                           <>
                             <button
-                              onClick={() => handleApprove(s.id, s.name)}
+                              onClick={() => askApprove(s)}
                               className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-[12px] font-bold hover:bg-emerald-600 transition-colors"
                             >
                               <span className="material-symbols-outlined text-[16px]">check_circle</span>
                               Approve
                             </button>
                             <button
-                              onClick={() => handleReject(s.id, s.name)}
+                              onClick={() => askReject(s)}
                               className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-600 border border-red-200 rounded-lg text-[12px] font-bold hover:bg-red-50 transition-colors"
                             >
                               <span className="material-symbols-outlined text-[16px]">cancel</span>
@@ -339,7 +417,7 @@ export default function AdminStudents() {
                         )}
                         {tab === 'active' && (
                           <button
-                            onClick={() => handleReject(s.id, s.name)}
+                            onClick={() => askReject(s)}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-600 border border-red-200 rounded-lg text-[12px] font-bold hover:bg-red-50 transition-colors"
                             title="Deactivate Account"
                           >
@@ -349,7 +427,7 @@ export default function AdminStudents() {
                         )}
                         {tab === 'rejected' && (
                           <button
-                            onClick={() => handleReinstate(s.id, s.name)}
+                            onClick={() => askReinstate(s)}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-900 text-white rounded-full text-[12px] font-bold hover:bg-neutral-700 transition-colors"
                           >
                             <span className="material-symbols-outlined text-[16px]">undo</span>
@@ -357,7 +435,7 @@ export default function AdminStudents() {
                           </button>
                         )}
                         <button
-                          onClick={() => handleDelete(s.id)}
+                          onClick={() => askDelete(s)}
                           className="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center transition-colors"
                           title="Remove"
                         >
@@ -372,6 +450,8 @@ export default function AdminStudents() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog pending={pending} busy={confirming} onCancel={() => setPending(null)} onConfirm={runPending} />
     </motion.div>
   );
 }

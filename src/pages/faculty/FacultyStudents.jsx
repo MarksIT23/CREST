@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { getStudents, updateStudentAccountStatus, addStudent } from '../../services/data';
 import SearchBar from '../../components/SearchBar';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 const STATUS_TABS = [
   { id: 'pending',  label: 'Pending Approval', icon: 'pending_actions' },
@@ -33,6 +34,8 @@ export default function FacultyStudents() {
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [pending, setPending] = useState(null);
+  const [confirming, setConfirming] = useState(false);
 
   const showToast = (msg) => {
     setToast(msg);
@@ -55,24 +58,71 @@ export default function FacultyStudents() {
     refresh();
   }, [refresh]);
 
-  const handleApprove = async (id, name) => {
+  const runPending = async () => {
+    if (!pending) return;
+    setConfirming(true);
+    try {
+      await pending.onConfirm();
+    } finally {
+      setConfirming(false);
+      setPending(null);
+    }
+  };
+
+  const doApprove = async (id, name) => {
     await updateStudentAccountStatus(id, 'active', user?.name);
     showToast(`✓ ${name}'s account has been approved.`);
     refresh();
   };
 
-  const handleReject = async (id, name) => {
-    if (!window.confirm(`Deactivate/reject ${name}'s account?`)) return;
+  const doReject = async (id, name) => {
     await updateStudentAccountStatus(id, 'rejected', user?.name);
     showToast(`${name}'s account has been set to rejected.`);
     refresh();
   };
 
-  const handleReinstate = async (id, name) => {
+  const doReinstate = async (id, name) => {
     await updateStudentAccountStatus(id, 'active', user?.name);
     showToast(`${name}'s account has been reinstated.`);
     refresh();
   };
+
+  const detailOf = (s) => [s.studentId, s.program, [s.year, s.section].filter(Boolean).join(' ')].filter(Boolean).join(' · ');
+
+  const askApprove = (s) => setPending({
+    tone: 'approve',
+    icon: 'check_circle',
+    title: `Approve ${s.name}?`,
+    message: 'Approving activates the account immediately. The student will be able to sign in and submit capstones.',
+    detail: detailOf(s),
+    confirmLabel: 'Approve account',
+    onConfirm: () => doApprove(s.id, s.name),
+  });
+
+  const askReject = (s) => {
+    const verb = tab === 'active' ? 'Deactivate' : 'Reject';
+    setPending({
+      tone: 'danger',
+      icon: 'cancel',
+      title: `${verb} ${s.name}'s account?`,
+      message: tab === 'active'
+        ? 'The student will be signed out and blocked from signing in until reinstated.'
+        : 'The registration will be rejected. The student will stay blocked until reinstated.',
+      detail: detailOf(s),
+      confirmLabel: `${verb} account`,
+      onConfirm: () => doReject(s.id, s.name),
+    });
+  };
+
+  const askReinstate = (s) => setPending({
+    tone: 'neutral',
+    icon: 'undo',
+    title: `Reinstate ${s.name}?`,
+    message: 'The account will be activated again with full student access.',
+    detail: detailOf(s),
+    confirmLabel: 'Reinstate account',
+    onConfirm: () => doReinstate(s.id, s.name),
+  });
 
   const handleAddStudent = async (e) => {
     e.preventDefault();
@@ -249,14 +299,14 @@ export default function FacultyStudents() {
                       {tab === 'pending' && (
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => handleApprove(s.id, s.name)}
+                            onClick={() => askApprove(s)}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-[12px] font-bold hover:bg-emerald-600 transition-colors"
                           >
                             <span className="material-symbols-outlined text-[16px]">check_circle</span>
                             Approve
                           </button>
                           <button
-                            onClick={() => handleReject(s.id, s.name)}
+                            onClick={() => askReject(s)}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-600 border border-red-200 rounded-lg text-[12px] font-bold hover:bg-red-50 transition-colors"
                           >
                             <span className="material-symbols-outlined text-[16px]">cancel</span>
@@ -266,7 +316,7 @@ export default function FacultyStudents() {
                       )}
                       {tab === 'active' && (
                         <button
-                          onClick={() => handleReject(s.id, s.name)}
+                          onClick={() => askReject(s)}
                           className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-600 border border-red-200 rounded-lg text-[12px] font-bold hover:bg-red-50 transition-colors ml-auto"
                           title="Deactivate Account"
                         >
@@ -276,7 +326,7 @@ export default function FacultyStudents() {
                       )}
                       {tab === 'rejected' && (
                         <button
-                          onClick={() => handleReinstate(s.id, s.name)}
+                          onClick={() => askReinstate(s)}
                           className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-900 text-white rounded-full text-[12px] font-bold hover:bg-neutral-700 transition-colors ml-auto"
                         >
                           <span className="material-symbols-outlined text-[16px]">undo</span>
@@ -291,6 +341,8 @@ export default function FacultyStudents() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog pending={pending} busy={confirming} onCancel={() => setPending(null)} onConfirm={runPending} />
     </motion.div>
   );
 }

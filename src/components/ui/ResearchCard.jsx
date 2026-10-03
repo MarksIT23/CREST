@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import GlassCard from './GlassCard';
 import StatusBadge from './StatusBadge';
+import SaveButton from './SaveButton';
+import useSavedPapers from '../../hooks/useSavedPapers';
 
 function Avatar({ name, className = 'w-8 h-8 text-[10px]' }) {
-  const initials = name
+  const initials = (name || '?')
     .split(' ')
     .map((n) => n[0])
     .join('')
@@ -20,11 +22,48 @@ function Avatar({ name, className = 'w-8 h-8 text-[10px]' }) {
 }
 
 /**
+ * Prisma stores authors as a JSON string on some endpoints (faculty detail
+ * returns raw rows). Normalize to an array so every caller is safe.
+ */
+function authorsToArray(authors) {
+  if (Array.isArray(authors)) return authors;
+  if (typeof authors === 'string') {
+    try {
+      const parsed = JSON.parse(authors);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      // Not JSON — fall through to single-name handling below
+    }
+    return authors ? [authors] : [];
+  }
+  return [];
+}
+
+/**
+ * Solid ink marker shown in the card meta row when the paper is saved.
+ */
+function SavedMark() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-neutral-900 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-white">
+      <span
+        className="material-symbols-outlined text-[14px]"
+        style={{ fontVariationSettings: "'FILL' 1" }}
+      >
+        bookmark
+      </span>
+      Saved
+    </span>
+  );
+}
+/**
  * Research paper card used across browse / home / dashboard.
  * Links to the paper detail page when `to` is provided.
  * Renders an image header when `image` is provided.
  */
 export default function ResearchCard({ paper, to, showStatus = false, footer, image, bare = false, lean = false }) {
+  const authors = authorsToArray(paper.authors);
+  const { has } = useSavedPapers();
+  const saved = has(paper.id);
   if (lean) {
     const leanCard = (
       <GlassCard className="p-6 flex flex-col group border-b-4 border-b-transparent hover:border-b-neutral-900 h-full">
@@ -39,6 +78,7 @@ export default function ResearchCard({ paper, to, showStatus = false, footer, im
             {paper.program || 'BSIT'}
           </span>
           <div className="flex items-center gap-2 shrink-0">
+            {saved && <SavedMark />}
             {showStatus && paper.status !== 'approved' && <StatusBadge status={paper.status} />}
             <span className="font-mono text-[12px] font-semibold text-on-surface-variant">{paper.year}</span>
           </div>
@@ -51,8 +91,8 @@ export default function ResearchCard({ paper, to, showStatus = false, footer, im
         <h3 className="font-display text-[19px] font-bold leading-snug line-clamp-2 min-h-[54px] group-hover:text-neutral-600 transition-colors">
           {paper.title}
         </h3>
-        <p className="mt-2 text-[13px] font-medium text-neutral-500 truncate" title={(paper.authors || []).join(', ')}>
-          {(paper.authors || []).join(', ')}
+        <p className="mt-2 text-[13px] font-medium text-neutral-500 truncate" title={authors.join(', ')}>
+          {authors.join(', ')}
         </p>
         <p className="mt-2.5 text-[13px] leading-relaxed text-neutral-600 line-clamp-3 min-h-[60px]">
           {paper.abstract}
@@ -61,8 +101,11 @@ export default function ResearchCard({ paper, to, showStatus = false, footer, im
           <span className="text-[12px] font-semibold text-neutral-600 truncate" title={paper.category}>
             {paper.category}
           </span>
-          <span className="material-symbols-outlined text-[20px] text-neutral-300 group-hover:text-neutral-900 group-hover:translate-x-1 transition-all shrink-0">
-            arrow_forward
+          <span className="flex items-center gap-2 shrink-0">
+            <SaveButton paperId={paper.id} />
+            <span className="material-symbols-outlined text-[20px] text-neutral-300 group-hover:text-neutral-900 group-hover:translate-x-1 transition-all">
+              arrow_forward
+            </span>
           </span>
         </div>
       </GlassCard>
@@ -113,6 +156,7 @@ export default function ResearchCard({ paper, to, showStatus = false, footer, im
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          {saved && <SavedMark />}
           {showStatus && <StatusBadge status={paper.status} />}
           <span className="text-[12px] font-semibold text-on-surface-variant">{paper.year}</span>
         </div>
@@ -133,14 +177,14 @@ export default function ResearchCard({ paper, to, showStatus = false, footer, im
 
       <div className="flex items-center justify-between pt-4 border-t border-outline-variant/30 mt-auto">
         <div className="flex -space-x-2">
-          {paper.authors.map((author, i) => (
+          {authors.map((author, i) => (
             <Avatar key={i} name={author} />
           ))}
         </div>
         {footer ? (
           footer
         ) : (
-          <div className="flex gap-3 font-mono text-[12px] text-on-surface-variant">
+          <div className="flex items-center gap-3 font-mono text-[12px] text-on-surface-variant">
             <div className="flex items-center gap-1" title={`${paper.views || 0} Views`}>
               <span className="material-symbols-outlined text-[16px]">visibility</span>
               <span className="text-[12px] font-medium">{paper.views || 0}</span>
@@ -149,6 +193,7 @@ export default function ResearchCard({ paper, to, showStatus = false, footer, im
               <span className="material-symbols-outlined text-[16px]">menu_book</span>
               <span className="text-[12px] font-medium">{paper.citations || 0}</span>
             </div>
+            <SaveButton paperId={paper.id} />
           </div>
         )}
       </div>
