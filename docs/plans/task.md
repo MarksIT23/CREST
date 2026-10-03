@@ -19,3 +19,4 @@
 | **Task 15: Fix Supabase Auth GoTrue Schema Tokens** | Completed | Patched NULL token columns in `auth.users` to empty strings `''` resolving "Database error querying schema" on login |
 | **Task 16: Configure Faculty Approval & Auth Flow** | Completed | Disabled Supabase email confirmations to allow faculty-managed account approval (`pending` -> `active`) |
 | **Task 17: Modernize Project Plans & Documentation** | Completed | Analyzed and updated all project plan markdown files to reflect current Supabase Cloud setup |
+| **Task 18: Fetch and Merge Main into Testing Branch** | Completed | Fetched latest origin/main, merged into testing, resolved conflicts preserving all Supabase configs and dependencies |
